@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>日志管理</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../static/plugins/admin/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/AdminLTE.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="../../static/css/mycss.css">
+    <link rel="stylesheet" href="../../static/css/admin/style.css">
+	<script src="../../static/plugins/admin/jQuery/jquery-2.2.3.min.js"></script>
+    <script src="../../static/plugins/admin/bootstrap/js/bootstrap.min.js"></script>
+
+	<!--angularjs-->
+	<script type="text/javascript" src="../../static/plugins/admin/angularjs/angular.min.js"></script>
+
+	<!-- 分页插件开始 -->
+	<script src="../../static/plugins/admin/angularjs/pagination.js"></script>
+	<link rel="stylesheet" href="../../static/plugins/admin/angularjs/pagination.css">
+	<!-- 分页插件结束 -->
+
+	<!--文件导出开始-->
+	<script src="../../static/plugins/makeExcel/xlsx.full.min.js"></script>
+	<script src="../../static/plugins/makeExcel/FileSaver.min.js"></script>
+	<!--文件导出结束-->
+
+	<script src="../../static/js/base_pagination.js"></script>
+	<script src="../../static/js/service/loggerService.js"></script>
+	<script src="../../static/js/service/userService.js"></script>
+	<!--<script src="../js/service/socketService.js"></script>
+	<script src="../js/service/alarmService.js"></script>
+	<script src="../js/service/deviceCtrlModeService.js"></script>
+	<script src="../js/service/portService.js"></script>
+	<script src="../js/service/warningToneService.js"></script>
+	<script src="../js/service/planModeService.js"></script>
+	<script src="../js/service/planParamService.js"></script>
+	<script src="../js/service/regionService.js"></script>-->
+	<script src="../../static/js/controller/baseController.js"></script>
+	<script src="../../static/js/controller/loggerController.js"></script>
+
+	<script src="../../static/js/filter/dateFilter.js"></script>
+
+    
+</head>
+<body class="hold-transition skin-red sidebar-mini" ng-app="speed" ng-controller="loggerController" ng-init="init()">
+  <!-- .box-body -->
+                    <div class="box-header with-border">
+                        <h3 class="box-title">日志管理</h3>
+                    </div>
+
+                    <div class="box-body">
+
+                        <!-- 数据表格 -->
+                        <div class="table-box">
+
+                            <!--工具栏-->
+                            <div class="pull-left">
+                                <div class="form-group form-inline">
+                                    <div class="btn-group">
+										<button type="button" class="btn btn-default" title="导出" ng-click="exportToExcel();"><i class="fa fa-refresh"></i> 导出</button>
+                                        <button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-tools pull-right">
+                                <div class="has-feedback">
+									<form class="form-inline">
+										<div class="form-group">
+											<label> 用户:</label>
+											<select class="form-control" ng-options="user.username as user.username for user in userList"
+													ng-model="searchLogger.username">
+												<option value="全部">全部</option>
+											</select>
+										</div>
+										<div class="form-group">
+											<label> 描述: </label>
+											<input type="text" class="form-control" ng-model = "searchLogger.desc1">
+										</div>
+										<div class="form-group">
+											<label> 时间: </label>
+											<input type="date" class="form-control" ng-model = "searchLogger.date">
+										</div>
+										<button class="btn btn-default" ng-click="initSearchLogger()">清空</button>
+										<button class="btn btn-default" ng-click="search(1,paginationConf.itemsPerPage)">查询</button>
+									</form>
+                                </div>
+                            </div>
+                            <!--工具栏/-->
+
+			                  <!--数据列表-->
+			                  <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+			                      <thead>
+			                          <tr>
+										  <th class="sorting_asc">ID</th>
+									      <th class="sorting">用户名称</th>
+									      <th class="sorting">发生时间</th>
+									      <th class="sorting">操作描述</th>
+			                          </tr>
+			                      </thead>
+			                      <tbody>
+			                          <tr ng-repeat="logger in list">
+				                          <td>{{logger.id}}</td>
+									      <td>{{logger.username}}</td>
+									      <td>{{logger.time}}</td>
+									      <td>{{logger.desc1}}</td>
+			                          </tr>
+			                      </tbody>
+			                  </table>
+			                  <!--数据列表/-->
+
+							<!-- 分页控件 -->
+							<tm-pagination conf="paginationConf"></tm-pagination>
+
+                        </div>
+                        <!-- 数据表格 /-->
+                        
+                     </div>
+                    <!-- /.box-body -->
+</body>
+<script>
+
+</script>
+</html>

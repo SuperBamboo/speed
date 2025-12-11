@@ -1,0 +1,1 @@
+var app = angular.module('speed', []);  //定义模块

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>设备管理</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../static/plugins/admin/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/AdminLTE.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="../../static/css/mycss.css">
+    <link rel="stylesheet" href="../../static/css/admin/style.css">
+	<script src="../../static/plugins/admin/jQuery/jquery-2.2.3.min.js"></script>
+    <script src="../../static/plugins/admin/bootstrap/js/bootstrap.min.js"></script>
+
+	<!--angularjs-->
+	<script type="text/javascript" src="../../static/plugins/admin/angularjs/angular.min.js"></script>
+
+	<!-- 分页插件开始 -->
+	<script src="../../static/plugins/admin/angularjs/pagination.js"></script>
+	<link rel="stylesheet" href="../../static/plugins/admin/angularjs/pagination.css">
+	<!-- 分页插件结束 -->
+
+	<script src="../../static/js/base.js"></script>
+	<script src="../../static/js/service/applyService.js"></script>
+	<script src="../../static/js/service/portService.js"></script>
+	<script src="../../static/js/service/warningToneService.js"></script>
+	<script src="../../static/js/service/socketService.js"></script>
+	<script src="../../static/js/service/planParamService.js"></script>
+	<script src="../../static/js/service/displayService.js"></script>
+	<script src="../../static/js/service/sessionService.js"></script>
+	<!--<script src="./js/service/planModeService.js"></script>
+	<script src="./js/service/planParamService.js"></script>-->
+	<script src="../../static/js/controller/applyController.js"></script>
+
+    
+</head>
+<body class="hold-transition skin-red sidebar-mini" ng-app="speed" ng-controller="applyController" ng-init="findAll()">
+  <!-- .box-body -->
+                    <div class="box-header with-border">
+                        <h3 class="box-title">申请管理</h3>
+                    </div>
+
+                    <div class="box-body">
+
+                        <!-- 数据表格 -->
+                        <div class="table-box">
+
+                            <!--工具栏-->
+                            <div class="pull-left">
+                                <div class="form-group form-inline">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-tools pull-right">
+                                <div class="has-feedback">
+							                                         
+                                </div>
+                            </div>
+                            <!--工具栏/-->
+
+			                  <!--数据列表-->
+			                  <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+			                      <thead>
+			                          <tr>
+									      <th class="sorting">设备ID</th>
+									      <th class="sorting">设备名称</th>
+									      <th class="sorting">管控名称</th>
+									      <th class="sorting">管控类型</th>
+									      <th class="sorting">申请时间</th>
+									      <th class="sorting">是否已读</th>
+					                      <th class="text-center">操作</th>
+			                          </tr>
+			                      </thead>
+			                      <tbody>
+			                          <tr ng-repeat="apply in applyList">
+				                          <td>{{apply.deviceId}}</td>
+									      <td>{{apply.deviceName}}</td>
+									      <td>{{apply.name}}</td>
+									      <td>{{apply.applyTypeStr}}</td>
+									      <td>{{apply.applyTime}}</td>
+									      <td>{{apply.flag == "true"?"已查看":"未查看"}}</td>
+		                                  <td class="text-center">
+		                                 	  <button type="button" class="btn bg-olive btn-xs" ng-if="apply.flag=='false' " data-toggle="modal" sec:authorize="hasAnyRole('SUPPER','ADMIN')" data-target="#editModal1"  ng-click="parseApply(apply)">处理</button>
+		                                  </td>
+			                          </tr>
+			                      </tbody>
+			                  </table>
+			                  <!--数据列表/-->
+
+                        </div>
+                        <!-- 数据表格 /-->
+                        
+                     </div>
+                    <!-- /.box-body -->
+
+  <!-- 编辑窗口 -->
+  <div class="modal fade" id="editModal1" tabindex="-1" role="dialog" data-backdrop="static" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" style="top: 0;width: 80%">
+		  <div class="modal-content">
+			  <div class="modal-header">
+				  <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="initData1()">×</button>
+				  <h3 id="myModalLabel">{{selectedApply.deviceName}} {{selectedApply.applyTypeStr}} 申请</h3>
+			  </div>
+			  <!--手动管控/程式管控按钮-->
+			  <div class="modal-body">
+				  <!--手动管控申请-->
+				  <div id="card1_sdgk" class="row" style="display: none;">
+					  <div class="col-md-12">
+						  <div id="send_sdgk" style="display: none">
+							  <div class="col-md-12">
+								  <table  class="table table-bordered table-striped table-hover dataTable">
+									  <tr>
+										  <td>申请类别</td>
+										  <td>
+											  <input ng-model="selectedApply.applyTypeStr" class="form-control" readonly>
+										  </td>
+									  </tr>
+									  <tr>
+										  <td>管控名称</td>
+										  <td>
+											  <input ng-model="selectedApply.name" class="form-control" readonly>
+										  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.relay1 != null &&  selectedApply.deviceControlModeApply.relay1 != '' ">
+										  <td>输出状态</td>
+										  <td>
+											  <div class="container1">
+												  <div class="item1" ng-repeat="port in portList">
+													  <div ng-show="needShowPort(port)">
+														  <input type="checkbox" ng-model="port.selected"> {{port.portName}}
+													  </div>
+
+												  </div>
+
+											  </div>
+
+										  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.relay2 != null &&  selectedApply.deviceControlModeApply.relay2 != '' ">
+										  <td>输出闪烁状态</td>
+										  <td>
+											  <div class="container1">
+												  <div class="item1" ng-repeat="port in portList1">
+													  <div ng-show="needShowPort(port)">
+														  <input type="checkbox" ng-model="port.selected"> {{port.portName}}
+													  </div>
+
+												  </div>
+
+											  </div>
+										  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.displayNo != null &&  selectedApply.deviceControlModeApply.displayNo != '' ">
+										  <td>显示内容</td>
+										  <td>
+											  <select class="form-control" ng-options="display.displayNo as display.displayName for display in displayList"
+													  ng-model="selectedDisplayNo">
+											  </select>
+										  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.displayNo != null &&  selectedApply.deviceControlModeApply.displayNo != '' ">
+										  <td>显示颜色</td>
+										  <td>
+											  <select class="form-control" ng-model="selectedDisplay.displayColor">
+												  <option value="0">不显示</option>
+												  <option value="1">红</option>
+												  <option value="2">绿</option>
+												  <option value="3">黄</option>
+											  </select>
+										  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.warningTone != null &&  selectedApply.deviceControlModeApply.warningTone != '' ">
+										  <td>语音播报内容</td>
+										  <td>
+											  <select class="form-control" ng-options="warningTone.warningToneNo as warningTone.warningToneName for warningTone in warningToneList"
+													  ng-model="selectedWarningToneNo">
+											  </select>
+										  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.volume != null &&  selectedApply.deviceControlModeApply.volume != '' ">
+										  <td>语音播报音量</td>
+										  <td><input ng-model="selectedApply.deviceControlModeApply.volume" class="form-control" placeholder="请输入语音播报音量" >  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.playInteval != null &&  selectedApply.deviceControlModeApply.playInteval != '' ">
+										  <td>语音播报间隔</td>
+										  <td><input ng-model="selectedApply.deviceControlModeApply.playInteval" class="form-control" placeholder="请输入播报间隔" >  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.playNumbers != null &&  selectedApply.deviceControlModeApply.playNumbers != '' ">
+										  <td>语音播报次数</td>
+										  <td><input ng-model="selectedApply.deviceControlModeApply.playNumbers" style="text-align: center" class="form-control" placeholder="请输入语音播报次数" >  </td>
+									  </tr>
+									  <tr ng-show="selectedApply.deviceControlModeApply.holdTime != null &&  selectedApply.deviceControlModeApply.holdTime != '' ">
+										  <td>语音持续时间</td>
+										  <td><input ng-model="selectedApply.deviceControlModeApply.holdTime" class="form-control" placeholder="请输入持续时间" >  </td>
+									  </tr>
+
+									  <tr>
+										  <td>保存管控参数</td>
+										  <td>
+											  <input type="checkbox" ng-model="entity.save">
+										  </td>
+									  </tr>
+
+									  <tr>
+										  <td>按规则自动恢复</td>
+										  <td>
+											  <input checked="checked" type="checkbox" ng-model="entity.auto">
+										  </td>
+									  </tr>
+								  </table>
+								  <div class="modal-footer">
+									  <button class="btn btn-success" data-dismiss="modal" aria-hidden="true" ng-click="sendSDGK(selectedApply.serverId,1)">确认下发</button>
+									  <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
+								  </div>
+							  </div>
+						  </div>
+						  <div id="cancel_sdgk" style="display: none;margin: 20px;text-align: center">
+							  <button class="btn btn-success" data-dismiss="modal" aria-hidden="true" ng-click="sendSDGK(selectedApply.serverId,0)">取消手动管控</button>
+						  </div>
+
+					  </div>
+				  </div>
+				  <!--程式控制申请-->
+				  <div id="card1_csgk" class="row" style="display: none;">
+					  <div class="col-md-12">
+						  <div id="send_csgk" style="display: flex">
+							  <div class="col-md-6">
+								  <table class="table table-bordered table-striped table-hover dataTable">
+									  <thead>
+									  <tr>
+										  <th class="sorting_asc">编号</th>
+										  <th class="sorting">参数名</th>
+										  <th class="sorting">参数值</th>
+									  </tr>
+									  </thead>
+									  <tbody>
+									  <tr ng-repeat="planParam in planParamList">
+										  <td>{{planParam.planParamNo}}</td>
+										  <td>{{planParam.planParamName}}</td>
+										  <td ng-show="planParam.havePlanParamValue==false">
+											  <input ng-model="planParam.defaultValue" class="form-control" placeholder="请输入参数值" >
+										  </td>
+										  <td ng-show="planParam.havePlanParamValue==true">
+											  <select class="form-control" ng-options="planParamValue.planParamValueNo as planParamValue.planParamValueName for planParamValue in planParam.planParamValueList"
+													  ng-model="planParam.defaultValue">
+
+											  </select>
+										  </td>
+									  </tr>
+									  </tbody>
+								  </table>
+							  </div>
+							  <div class="col-md-6">
+								  <table class="table table-bordered table-striped table-hover dataTable">
+									  <tr>
+										  <td>申请类别</td>
+										  <td>
+											  <input ng-model="selectedApply.applyTypeStr" class="form-control" readonly>
+										  </td>
+									  </tr>
+									  <tr>
+										  <td>管控名称</td>
+										  <td>
+											  <input ng-model="selectedApply.name" class="form-control" readonly>
+										  </td>
+									  </tr>
+
+									  <tr>
+										  <td>持续时间</td>
+										  <td><input ng-model="selectedApply.devicePlanModeApply.holdTime" class="form-control" placeholder="请输入持续时间" >  </td>
+									  </tr>
+									  <tr>
+										  <td>间隔时间</td>
+										  <td><input ng-model="selectedApply.devicePlanModeApply.intervalTime" class="form-control" placeholder="请输入间隔时间" >  </td>
+									  </tr>
+									  <tr>
+										  <td>重复次数</td>
+										  <td><input ng-model="selectedApply.devicePlanModeApply.repetitions" class="form-control" placeholder="请输入重复次数" >  </td>
+									  </tr>
+									  <tr>
+										  <td>同步参数</td>
+										  <td><input ng-model="selectedApply.devicePlanModeApply.sysTime" class="form-control" placeholder="请输入同步参数" >  </td>
+									  </tr>
+									  <tr>
+										  <td>保存管控参数</td>
+										  <td>
+											  <input type="checkbox" ng-model="entity1.save">
+										  </td>
+									  </tr>
+
+									  <tr>
+										  <td>按规则自动恢复</td>
+										  <td>
+											  <input type="checkbox" ng-model="entity1.auto">
+										  </td>
+									  </tr>
+								  </table>
+								  <div class="modal-footer">
+									  <button class="btn btn-success" data-dismiss="modal" aria-hidden="true" ng-click="sendCSGK(selectedApply.serverId,1)">确认下发</button>
+								  </div>
+							  </div>
+						  </div>
+						  <div id="cancel_csgk" style="display: none;margin: 20px;text-align: center">
+							  <button class="btn btn-success" data-dismiss="modal" aria-hidden="true"  ng-click="sendCSGK(selectedApply.serverId,0)">取消手动程控</button>
+						  </div>
+					  </div>
+				  </div>
+			  </div>
+
+		  </div>
+	  </div>
+  </div>
+</body>
+<script>
+
+</script>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>设备管理</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../static/plugins/admin/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/AdminLTE.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="../../static/css/mycss.css">
+    <link rel="stylesheet" href="../../static/css/admin/style.css">
+    <script src="../../static/plugins/admin/jQuery/jquery-2.2.3.min.js"></script>
+    <script src="../../static/plugins/admin/bootstrap/js/bootstrap.min.js"></script>
+
+    <!--<link href='http://192.168.2.104:9000/bigemap.js/v2.1.0/bigemap.css' rel='stylesheet'/>
+    <script src='http://192.168.2.104:9000/bigemap.js/v2.1.0/bigemap.js'></script>-->
+
+    <!--angularjs-->
+    <script type="text/javascript" src="../../static/plugins/admin/angularjs/angular.min.js"></script>
+
+    <!-- 分页插件开始 -->
+    <script src="../../static/plugins/admin/angularjs/pagination.js"></script>
+    <link rel="stylesheet" href="../../static/plugins/admin/angularjs/pagination.css">
+    <!-- 分页插件结束 -->
+
+    <!--文件导出开始-->
+    <script src="../../static/plugins/makeExcel/xlsx.full.min.js"></script>
+    <script src="../../static/plugins/makeExcel/FileSaver.min.js"></script>
+    <!--文件导出结束-->
+
+    <script src="../../static/js/base_pagination.js"></script>
+    <script src="../../static/js/service/parameterService.js"></script>
+    <script src="../../static/js/service/deviceService.js"></script>
+    <script src="../../static/js/service/socketService.js"></script>
+    <script src="../../static/js/service/alarmService.js"></script>
+    <script src="../../static/js/service/deviceCtrlModeService.js"></script>
+    <script src="../../static/js/service/portService.js"></script>
+    <script src="../../static/js/service/warningToneService.js"></script>
+    <script src="../../static/js/service/planModeService.js"></script>
+    <script src="../../static/js/service/planParamService.js"></script>
+    <script src="../../static/js/service/regionService.js"></script>
+    <script src="../../static/js/service/displayService.js"></script>
+    <script src="../../static/js/service/sessionService.js"></script>
+    <script src="../../static/js/service/regionDeviceTypeService.js"></script>
+    <script src="../../static/js/controller/baseController.js"></script>
+    <script src="../../static/js/controller/deviceController.js"></script>
+
+    <script src="../../static/js/filter/dateFilter.js"></script>
+
+    <style>
+        #map {
+            top: 0;
+            bottom: 0;
+            padding: 0;
+            margin: 0;
+            width: auto;
+            height: 100%;
+        }
+    </style>
+
+
+</head>
+<body class="hold-transition skin-red sidebar-mini" ng-app="speed" ng-controller="deviceController">
+<!-- .box-body -->
+<div class="box-header with-border">
+    <h3 class="box-title">设备管理</h3>
+</div>
+
+<div class="box-body">
+
+    <!-- 数据表格 -->
+    <div class="table-box">
+
+        <!--工具栏-->
+        <div class="pull-left">
+            <div class="form-group form-inline">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-danger" title="刷新全部数据" sec:authorize="hasAnyRole('SUPPER')" ng-click="sendDeviceRefresh();"><i class="fa fa-refresh"></i> 刷新全部数据</button>
+                    <button type="button" class="btn btn-default" title="导出" ng-click="exportToExcel();"><i class="fa fa-refresh"></i> 导出</button>
+                    <!--<button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>-->
+                </div>
+            </div>
+        </div>
+        <div class="box-tools pull-right">
+            <div class="has-feedback">
+                <form class="form-inline">
+                    <div class="form-group">
+                        <label>区域:</label>
+                        <select class="form-control" ng-options="region.regionName as region.regionName for region in regionList" ng-change="updateSubRegion()"
+                                ng-model="searchDevice.ofRegionId">
+                        </select>
+                    </div>
+                    <div class="form-group" >
+                        <label>子区: </label>
+                        <select class="form-control" ng-options="subRegion for subRegion in subRegionList"
+                                ng-model="searchDevice.ofSubRegionId">
+                        </select>
+                    </div>
+                    <div class="form-group" >
+                        <label>设备类型: </label>
+                        <select class="form-control" ng-options="deviceType for deviceType in deviceTypeList"
+                                ng-model="searchDevice.deviceType">
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>设备名称</label>
+                        <input type="text" class="form-control" ng-model = "searchDevice.deviceName">
+                    </div>
+                    <button class="btn btn-default" ng-click="initSearchDevice()">清空</button>
+                    <button class="btn btn-default" ng-click="search(1,paginationConf.itemsPerPage)">查询</button>
+                </form>
+            </div>
+        </div>
+        <!--工具栏/-->
+
+        <!--数据列表-->
+        <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+            <thead>
+            <tr>
+                <th class="sorting_asc">设备ID</th>
+                <th class="sorting">设备名称</th>
+                <th class="sorting">所在区域</th>
+                <th class="sorting">所在子区</th>
+                <th class="sorting">设备类型</th>
+                <th class="sorting">规格型号</th>
+                <th class="sorting">供应商</th>
+                <th class="sorting">上线日期</th>
+                <th class="sorting">经度</th>
+                <th class="sorting">纬度</th>
+                <th class="text-center">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="device in list">
+                <td>{{device.deviceId}}</td>
+                <td>{{device.deviceName}}</td>
+                <td>{{device.ofRegionId}}</td>
+                <td>{{device.ofSubRegionId}}</td>
+                <td ng-if="device.deviceType == '0' ">
+                    测速
+                </td>
+                <td ng-if="device.deviceType == '1' ">
+                    显示屏
+                </td>
+                <td ng-if="device.deviceType == '2' ">
+                    警闪灯
+                </td>
+                <td ng-if="device.deviceType == '3' ">
+                    移动灯
+                </td>
+                <td ng-if="device.deviceType == '4' ">
+                    信号灯
+                </td>
+                <td>{{device.deviceModel}}</td>
+                <td>{{device.supplier}}</td>
+                <td>{{device.serviceDate}}</td>
+                <td>{{device.longitude}}</td>
+                <td>{{device.dimension}}</td>
+                <td class="text-center">
+                    <button type="button" class="btn bg-olive btn-xs" data-toggle="modal" data-target="#editModal"  ng-click="findParameterByDeviceId(device.deviceId)">详情</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <!--数据列表/-->
+
+        <!-- 分页控件 -->
+        <tm-pagination conf="paginationConf"></tm-pagination>
+
+    </div>
+    <!-- 数据表格 /-->
+
+</div>
+<!-- /.box-body -->
+
+<!-- 编辑窗口 -->
+<div class="modal fade" id="editModal" tabindex="-1" data-backdrop="static" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="width: 100%">
+    <div class="modal-dialog" style="top: 0;width: 80%">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="myModalLabel">{{selectedDevice.deviceName}}</h3>
+            </div>
+            <div style="margin-left: 15px;margin-top: 15px;">
+                <ul class="nav nav-pills">
+                    <li id="card_li_1" role="presentation" class="active"><a href="javascript:void(0);" ng-click="changeCard(1)">设备参数</a></li>
+                    <li id="card_li_2" role="presentation"><a href="javascript:void(0);" sec:authorize="hasAnyRole('SUPPER','ADMIN')" ng-click="changeCard(2)">设备状态</a></li>
+                    <li id="card_li_3" role="presentation"><a href="javascript:void(0);" ng-click="changeCard(3)">报警信息</a></li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <div id="card1" class="row" style="display: flex;">
+                    <div class="col-md-12">
+                        <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+                            <thead>
+                            <tr>
+
+                                <th class="sorting_asc">参数序号</th>
+                                <th class="sorting">参数名称</th>
+                                <th class="sorting">参数类型</th>
+                                <th class="sorting">参数值</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="parameter in parameterList">
+                                <td>{{parameter.parameterNo}}</td>
+                                <td>{{parameter.parameterName}}</td>
+                                <td>{{parameter.parameterType}}</td>
+                                <td>{{parameter.parameterValue}}</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!--<div class="col-md-5" style="flex: 1;">
+                        <table class="table table-bordered table-striped"  width="800px">
+                            <tr>
+                                <div id='map'></div>
+                            </tr>
+                        </table>
+                    </div>-->
+                </div>
+
+                <div id="card2" class="row" style="display: none;">
+                    <div class="col-md-12">
+                        <table class="table table-bordered table-striped"  width="800px">
+
+                            <tr>
+                                <td>检测时间</td>
+                                <td>{{deviceStau.detectTime}}</td>
+                            </tr>
+                            <tr>
+                                <td>工作方式</td>
+                                <td>{{deviceStau.ctrlMode == null? '无':deviceStau.ctrlMode}}</td>
+                            </tr>
+                            <tr>
+                                <td>手控状态</td>
+                                <td>{{deviceStau.tempCtrl == null? '无':deviceStau.tempCtrl}}</td>
+                            </tr>
+                            <tr>
+                                <td>程控状态</td>
+                                <td>{{deviceStau.tempPlan == null ? '无':deviceStau.tempPlan}}</td>
+                            </tr>
+
+                            <tr>
+                                <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+                                    <thead>
+                                    <tr>
+
+                                        <th class="sorting_asc">检测序号</th>
+                                        <th class="sorting">检测名称</th>
+                                        <th class="sorting">检测值</th>
+                                        <th class="sorting">异常状态</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="detectStau in deviceStau.detectStauList">
+                                        <td>{{detectStau.detectId}}</td>
+                                        <td>{{detectStau.detectName}}</td>
+                                        <td>{{detectStau.detectValue}}</td>
+                                        <td>{{detectStau.abnormalStau}}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </tr>
+                            <tr>
+                                <div id="cancelGK" style="text-align: right;float:right;display: none">
+                                    <button class="btn btn-default" sec:authorize="hasAnyRole('SUPPER','ADMIN')" ng-click="sendCancelGK()">取消管控</button>
+                                </div>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="card3" class="row" style="display: none;">
+                    <div class="col-md-12">
+                        <table class="table table-bordered table-striped"  width="800px">
+                            <div class="table-box">
+                                <!--数据列表-->
+                                <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+                                    <thead>
+                                    <tr>
+                                        <th class="sorting_asc">区域</th>
+                                        <th class="sorting">子区</th>
+                                        <th class="sorting">报警时间</th>
+                                        <th class="sorting">报警描述</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="alarm in alarmList">
+                                        <td>{{alarm.ofRegionName}}</td>
+                                        <td>{{alarm.ofSubregionName}}</td>
+                                        <td>{{(alarm.occurDate + alarm.occurTime) | customDateTime }}</td>
+                                        <td>{{alarm.alarmDesc}}</td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                                <!--数据列表/-->
+
+                                <!-- 分页控件 -->
+                                <tm-pagination conf="paginationConf1"></tm-pagination>
+                                <div style="float: right">
+                                    <button class="btn btn-default" ng-click="exportToExcelByDeviceId()">导出</button>
+                                </div>
+                            </div>
+                        </table>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-success" data-dismiss="modal" aria-hidden="true" ng-click="initData()">关闭</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- 编辑窗口 -->
+<div class="modal fade" id="editModal1" tabindex="-1" role="dialog" data-backdrop="static" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="top: 0;width: 80%">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true" ng-click="initData1()">×</button>
+                <h3 id="myModalLabel">{{selectedDevice.deviceName}} 管控信息</h3>
+            </div>
+            <!--手动管控/程式管控按钮-->
+            <div style="margin-left: 15px;margin-top: 15px;">
+                <ul class="nav nav-pills">
+                    <li id="card_sdgk" role="presentation" class="active"><a href="javascript:void(0);" ng-click="changeGKCard(1)">手动管控</a></li>
+                    <li id="card_csgk" role="presentation"><a href="javascript:void(0);" ng-click="changeGKCard(2)">程式管控</a></li>
+                </ul>
+            </div>
+            <div class="modal-body">
+                <div id="card1_sdgk" class="row" style="display: flex;">
+                    <div class="col-md-12">
+                        <div id="have_sdgk" style="display: flex">
+                            <div class="col-md-12">
+                                <table  class="table table-bordered table-striped table-hover dataTable">
+                                    <tr>
+                                        <td>方案列表</td>
+                                        <td>
+                                            <select class="form-control" ng-options="deviceCtrlMode.deviceCtrlModeNo as deviceCtrlMode.deviceCtrlModeName for deviceCtrlMode in deviceCtrlModeList"
+                                                    ng-model="selectedDeviceCtrlModeNo">
+                                            </select>
+                                            <!--{{selectedDeviceCtrlModeNo}}-->
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.relayStauValidity== '1' ">
+                                        <td>输出状态</td>
+                                        <td>
+                                            <div class="container1">
+                                                <div class="item1" ng-repeat="port in portList">
+                                                    <div ng-show="needShowPort(port)">
+                                                        <input type="checkbox" ng-model="port.selected"> {{port.portName}}
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.relayStau1Validity== '1' ">
+                                        <td>输出闪烁状态</td>
+                                        <td>
+                                            <div class="container1">
+                                                <div class="item1" ng-repeat="port in portList1">
+                                                    <div ng-show="needShowPort(port)">
+                                                        <input type="checkbox" ng-model="port.selected"> {{port.portName}}
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.displayNoValidity == '1' ">
+                                        <td>显示内容</td>
+                                        <td>
+                                            <select class="form-control" ng-options="display.displayNo as display.displayName for display in displayList"
+                                                    ng-model="selectedDisplayNo">
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.displayNoValidity == '1' ">
+                                        <td>显示颜色</td>
+                                        <td>
+                                            <select class="form-control" ng-model="selectedDisplay.displayColor">
+                                                <option value="0">不显示</option>
+                                                <option value="1">红</option>
+                                                <option value="2">绿</option>
+                                                <option value="3">黄</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.warningToneNoValidity == '1' ">
+                                        <td>语音播报内容</td>
+                                        <td>
+                                            <select class="form-control" ng-options="warningTone.warningToneNo as warningTone.warningToneName for warningTone in warningToneList"
+                                                    ng-model="selectedWarningToneNo">
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.playIntevalValidity == '1' ">
+                                        <td>语音播报间隔</td>
+                                        <td><input ng-model="selectedDeviceCtrlMode.playInteval"  class="form-control" placeholder="请输入播报间隔 1-25 " >  </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.playNumbersValidity == '1' ">
+                                        <td>语音播报次数</td>
+                                        <td><input ng-model="selectedDeviceCtrlMode.playNumbers" class="form-control" placeholder="请输入语音播报次数" >  </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.volumeValidity == '1' ">
+                                        <td>语音播报音量</td>
+                                        <td><input ng-model="selectedDeviceCtrlMode.volume" class="form-control" placeholder="请输入语音播报音量" >  </td>
+                                    </tr>
+                                    <tr ng-if="selectedDeviceCtrlMode.holdTimeValidity == '1' ">
+                                        <td>语音持续时间</td>
+                                        <td><input ng-model="selectedDeviceCtrlMode.holdTime" class="form-control" placeholder="请输入持续时间" >  </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>保存管控参数</td>
+                                        <td>
+                                            <input type="checkbox" ng-model="entity.save">
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>按规则自动恢复</td>
+                                        <td>
+                                            <input type="checkbox" ng-model="entity.auto">
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="modal-footer">
+                                    <button class="btn btn-success" data-dismiss="modal" aria-hidden="true" ng-click="sendSDGK()">确认下发</button>
+                                    <button class="btn btn-default" data-dismiss="modal" aria-hidden="true">关闭</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="no_sdgk" style="display: none;margin: 20px;text-align: center">
+                            该设备没有手动管控功能
+                        </div>
+
+                    </div>
+                </div>
+                <div id="card1_csgk" class="row" style="display: none;">
+                    <div class="col-md-12">
+                        <div id="have_csgk" style="display: flex">
+                            <div class="col-md-6">
+                                <table class="table table-bordered table-striped table-hover dataTable">
+                                    <thead>
+                                    <tr>
+                                        <th class="sorting_asc">编号</th>
+                                        <th class="sorting">参数名</th>
+                                        <th class="sorting">参数值</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="planParam in planParamList">
+                                        <td>{{planParam.planParamNo}}</td>
+                                        <td>{{planParam.planParamName}}</td>
+                                        <td ng-if="planParam.havePlanParamValue==false">
+                                            <input ng-model="planParam.defaultValue" class="form-control" placeholder="请输入参数值" >
+                                        </td>
+                                        <td ng-if="planParam.havePlanParamValue==true">
+                                            <select class="form-control" ng-options="planParamValue.planParamValueNo as planParamValue.planParamValueName for planParamValue in planParam.planParamValueList"
+                                                    ng-model="planParam.defaultValue">
+
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table table-bordered table-striped table-hover dataTable">
+                                    <tr>
+                                        <td>方案列表</td>
+                                        <td>
+                                            <select class="form-control" ng-options="planMode.planModeNo as planMode.planModeName for planMode in planModeList"
+                                                    ng-model="selectedPlanModeNo">
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>持续时间</td>
+                                        <td><input ng-model="selectedPlanMode.holdTime" class="form-control" placeholder="请输入持续时间" >  </td>
+                                    </tr>
+                                    <tr>
+                                        <td>间隔时间</td>
+                                        <td><input ng-model="selectedPlanMode.intervalTime" class="form-control" placeholder="请输入间隔时间" >  </td>
+                                    </tr>
+                                    <tr>
+                                        <td>重复次数</td>
+                                        <td><input ng-model="selectedPlanMode.repetitions" class="form-control" placeholder="请输入重复次数" >  </td>
+                                    </tr>
+                                    <tr>
+                                        <td>同步参数</td>
+                                        <td><input ng-model="selectedPlanMode.sysTime" class="form-control" placeholder="请输入同步参数" >  </td>
+                                    </tr>
+                                    <tr>
+                                        <td>保存管控参数</td>
+                                        <td>
+                                            <input type="checkbox" ng-model="entity1.save">
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>按规则自动恢复</td>
+                                        <td>
+                                            <input type="checkbox" ng-model="entity1.auto">
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="modal-footer">
+                                    <button class="btn btn-success" data-dismiss="modal" aria-hidden="true" ng-click="sendCSGK()">确认下发</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="no_csgk" style="display: none;margin: 20px;text-align: center">
+                            该设备没有程式管控功能
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</body>
+<script>
+
+</script>
+</html>

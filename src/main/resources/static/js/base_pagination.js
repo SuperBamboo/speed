@@ -1,0 +1,1 @@
+var app = angular.module("speed", ["pagination"]);  //定义分页品优购模块

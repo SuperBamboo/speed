@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>用户管理</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../static/plugins/admin/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/AdminLTE.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="../../static/css/mycss.css">
+    <link rel="stylesheet" href="../../static/css/admin/style.css">
+	<script src="../../static/plugins/admin/jQuery/jquery-2.2.3.min.js"></script>
+    <script src="../../static/plugins/admin/bootstrap/js/bootstrap.min.js"></script>
+
+	<!--angularjs-->
+	<script type="text/javascript" src="../../static/plugins/admin/angularjs/angular.min.js"></script>
+
+	<!-- 分页插件开始 -->
+	<script src="../../static/plugins/admin/angularjs/pagination.js"></script>
+	<link rel="stylesheet" href="../../static/plugins/admin/angularjs/pagination.css">
+	<!-- 分页插件结束 -->
+
+	<script src="../../static/js/base.js"></script>
+	<script src="../../static/js/service/userService.js"></script>
+	<script src="../../static/js/service/regionDeviceTypeService.js"></script>
+	<!--<script src="../js/service/warningToneService.js"></script>
+	<script src="../js/service/socketService.js"></script>
+	<script src="../js/service/planParamService.js"></script>-->
+	<!--<script src="./js/service/portService.js"></script>
+	<script src="./js/service/warningToneService.js"></script>
+	<script src="./js/service/planModeService.js"></script>
+	<script src="./js/service/planParamService.js"></script>-->
+	<script src="../../static/js/controller/userController.js"></script>
+
+    
+</head>
+<body class="hold-transition skin-red sidebar-mini" ng-app="speed" ng-controller="userController" ng-init="findAll()">
+  <!-- .box-body -->
+                    <div class="box-header with-border">
+                        <h3 class="box-title">用户管理</h3>
+                    </div>
+
+                    <div class="box-body">
+
+                        <!-- 数据表格 -->
+                        <div class="table-box">
+
+                            <!--工具栏-->
+                            <div class="pull-left">
+                                <div class="form-group form-inline">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default" title="新建" data-toggle="modal" data-target="#editModal1" ng-click="initAddUser()"><i class="fa fa-refresh"></i> 新建</button>
+                                        <button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-tools pull-right">
+                                <div class="has-feedback">
+							                                         
+                                </div>
+                            </div>
+                            <!--工具栏/-->
+
+			                  <!--数据列表-->
+			                  <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+			                      <thead>
+			                          <tr>
+									      <th class="sorting">用户ID</th>
+									      <th class="sorting">用户名称</th>
+									      <th class="sorting">用户权限</th>
+					                      <th class="text-center">修改</th>
+			                          </tr>
+			                      </thead>
+			                      <tbody>
+			                          <tr ng-repeat="user in userList">
+				                          <td>{{user.id}}</td>
+									      <td>{{user.username}}</td>
+									      <td>{{user.role}}</td>
+		                                  <td class="text-center">
+		                                 	  <button type="button" class="btn bg-olive btn-xs" data-toggle="modal" data-target="#editModal"  ng-click="findById(user.id)">修改</button>
+		                                 	  <button type="button" class="btn bg-olive btn-xs"  ng-click="deleteById(user.id)">删除</button>
+		                                  </td>
+			                          </tr>
+			                      </tbody>
+			                  </table>
+			                  <!--数据列表/-->
+
+                        </div>
+                        <!-- 数据表格 /-->
+                        
+                     </div>
+                    <!-- /.box-body -->
+
+  <!-- 编辑窗口 -->
+  <div class="modal fade" id="editModal1" tabindex="-1" role="dialog" data-backdrop="static" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" style="top: 0;width: 60%">
+		  <div class="modal-content">
+			  <div class="modal-header">
+				  <h3 id="myModalLabel">新建用户</h3>
+			  </div>
+			  <!--手动管控/程式管控按钮-->
+			  <div class="modal-body">
+				  <!--手动管控申请-->
+				  <div class="row">
+					  <div class="col-md-12">
+						  <div class="col-md-12">
+							  <table  class="table table-bordered table-striped table-hover dataTable">
+								  <tr ng-if="errorMsg.flag">
+									  <td>错误信息</td>
+									  <td style="color: red">
+										  {{errorMsg.message}}
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>用户名</td>
+									  <td>
+										  <input type="text" maxlength="16" ng-model="addUser.username" ng-blur="findByUsername()" class="form-control">
+										  <div id="error_username1"></div>
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>用户密码</td>
+									  <td>
+										  <input ng-model="addUser.password" type="password" class="form-control">
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>用户权限</td>
+									  <td>
+										  <select class="form-control" ng-model="addUser.role">
+											  <option value="SUPPER">超级用户</option>
+											  <option value="ADMIN">管理者</option>
+											  <option value="USER" selected>普通用户</option>
+										  </select>
+									  </td>
+								  </tr>
+							  </table>
+							  <div class="modal-footer">
+								  <button class="btn btn-success" aria-hidden="true" ng-click="saveUser()">确定</button>
+								  <button class="btn btn-default" data-dismiss="modal" aria-hidden="true" ng-click="initAddUser()">关闭</button>
+							  </div>
+						  </div>
+					  </div>
+				  </div>
+			  </div>
+
+		  </div>
+	  </div>
+  </div>
+
+  <!-- 编辑窗口 -->
+  <div class="modal fade" id="editModal" tabindex="-1" role="dialog" data-backdrop="static" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" style="top: 0;width: 60%">
+		  <div class="modal-content">
+			  <div class="modal-header">
+				  <h3>修改用户</h3>
+			  </div>
+			  <!--手动管控/程式管控按钮-->
+			  <div class="modal-body">
+				  <!--手动管控申请-->
+				  <div class="row">
+					  <div class="col-md-12">
+						  <div class="col-md-12">
+							  <table  class="table table-bordered table-striped table-hover dataTable">
+								  <tr ng-if="errorMsg.flag">
+									  <td>错误信息</td>
+									  <td style="color: red">
+										  {{errorMsg.message}}
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>用户名</td>
+									  <td>
+										  <input ng-model="updateUser.username"  class="form-control" readonly>
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>用户密码</td>
+									  <td>
+										  <input placeholder="请务必输入修改密码" ng-model="updateUser.password" class="form-control">
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>用户权限</td>
+									  <td>
+										  <select class="form-control" ng-model="updateUser.role">
+											  <option value="SUPPER">超级用户</option>
+											  <option value="ADMIN">管理者</option>
+											  <option value="USER" selected>普通用户</option>
+										  </select>
+									  </td>
+								  </tr>
+
+								  <tr>
+									  <td style="vertical-align: middle">区域权限</td>
+									  <td>
+										  <table  class="table table-bordered table-striped table-hover dataTable">
+											  <tr>
+												  <td>选择</td>
+												  <td>服务器</td>
+												  <td>区域</td>
+												  <td>子区</td>
+												  <td>设备类型</td>
+											  </tr>
+											  <tr ng-repeat="regionDeviceType in regionDeviceTypeList">
+												  <td>
+													  <input type="checkbox" ng-model="regionDeviceType.check">
+												  </td>
+												  <td>{{regionDeviceType.server.serverName}}</td>
+												  <td>{{regionDeviceType.region}}</td>
+												  <td>{{regionDeviceType.subregion}}</td>
+												  <td ng-if="regionDeviceType.deviceType == '0' ">
+													  测速
+												  </td>
+												  <td ng-if="regionDeviceType.deviceType == '1' ">
+													  显示屏
+												  </td>
+												  <td ng-if="regionDeviceType.deviceType == '2' ">
+													  警闪灯
+												  </td>
+												  <td ng-if="regionDeviceType.deviceType == '3' ">
+													  移动灯
+												  </td>
+												  <td ng-if="regionDeviceType.deviceType == '4' ">
+													  信号灯
+												  </td>
+												  <!--<td>{{regionDeviceType.deviceType}}</td>-->
+											  </tr>
+										  </table>
+									  </td>
+								  </tr>
+							  </table>
+							  <div class="modal-footer">
+								  <button class="btn btn-success" aria-hidden="true" ng-click="update1User()">确定</button>
+								  <button class="btn btn-default" data-dismiss="modal" aria-hidden="true" ng-click="initUpdateUser()">关闭</button>
+							  </div>
+						  </div>
+					  </div>
+				  </div>
+			  </div>
+
+		  </div>
+	  </div>
+  </div>
+</body>
+<script>
+
+</script>
+</html>

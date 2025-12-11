@@ -1,0 +1,11 @@
+.container1 {
+    display: flex;
+    justify-content: center; /* 垂直居中 */
+    width: auto;
+    align-items: center; /* 水平居中 */
+    border: 1px solid #ccc; /* 为了可视化，添加边框 */
+}
+
+.item1 {
+    padding: 10px; /* 可选：设置元素内边距 */
+}
