@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>服务器管理</title>
+    <meta content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" name="viewport">
+    <link rel="stylesheet" href="../../static/plugins/admin/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/AdminLTE.css">
+    <link rel="stylesheet" href="../../static/plugins/admin/adminLTE/css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="../../static/css/mycss.css">
+    <link rel="stylesheet" href="../../static/css/admin/style.css">
+	<script src="../../static/plugins/admin/jQuery/jquery-2.2.3.min.js"></script>
+    <script src="../../static/plugins/admin/bootstrap/js/bootstrap.min.js"></script>
+
+	<!--angularjs-->
+	<script type="text/javascript" src="../../static/plugins/admin/angularjs/angular.min.js"></script>
+
+
+	<script src="../../static/js/base.js"></script>
+	<script src="../../static/js/service/serverService.js"></script>
+	<script src="../../static/js/service/socketService.js"></script>
+	<script src="../../static/js/controller/serverController.js"></script>
+
+    
+</head>
+<body class="hold-transition skin-red sidebar-mini" ng-app="speed" ng-controller="serverController" ng-init="findAll()">
+  <!-- .box-body -->
+                    <div class="box-header with-border">
+                        <h3 class="box-title">服务器管理</h3>
+                    </div>
+
+                    <div class="box-body">
+
+                        <!-- 数据表格 -->
+                        <div class="table-box">
+
+                            <!--工具栏-->
+                            <div class="pull-left">
+                                <div class="form-group form-inline">
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-default" title="新建" data-toggle="modal" data-target="#editModal1" ng-click="initAddServer()"><i class="fa fa-refresh"></i> 新建</button>
+                                        <button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="box-tools pull-right">
+                                <div class="has-feedback">
+							                                         
+                                </div>
+                            </div>
+                            <!--工具栏/-->
+
+			                  <!--数据列表-->
+			                  <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+			                      <thead>
+			                          <tr>
+									      <th class="sorting">服务器名称</th>
+									      <th class="sorting">IP</th>
+									      <th class="sorting">端口号</th>
+					                      <th class="sorting">用户名</th>
+					                      <th class="sorting">密码</th>
+					                      <th class="sorting">运行状态</th>
+					                      <th class="text-center">操作</th>
+			                          </tr>
+			                      </thead>
+			                      <tbody>
+			                          <tr ng-repeat="server in serverList">
+				                          <td>{{server.serverName}}</td>
+									      <td>{{server.ip}}</td>
+									      <td>{{server.port}}</td>
+									      <td>{{server.username}}</td>
+									      <td>{{server.password}}</td>
+									      <td ng-if="server.flag">
+											  运行中
+										  </td>
+										  <td ng-if="!server.flag">
+											  关闭
+										  </td>
+		                                  <td class="text-center">
+		                                 	  <button type="button" class="btn bg-olive btn-xs"  ng-if="!server.flag"  ng-click="openSocket(server)">启动</button>
+		                                 	  <button type="button" class="btn bg-olive btn-xs"  ng-if="server.flag"  ng-click="closeSocket(server)">关闭</button>
+		                                 	  <button type="button" class="btn bg-olive btn-xs" ng-if="!server.flag"  ng-click="deleteById(server.id)">删除</button>
+		                                  </td>
+			                          </tr>
+			                      </tbody>
+			                  </table>
+			                  <!--数据列表/-->
+
+                        </div>
+                        <!-- 数据表格 /-->
+                        
+                     </div>
+                    <!-- /.box-body -->
+
+  <!-- 新建服务器窗口 -->
+  <div class="modal fade" id="editModal1" tabindex="-1" role="dialog" data-backdrop="static" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog" style="top: 0;width: 60%">
+		  <div class="modal-content">
+			  <div class="modal-header">
+				  <h3 id="myModalLabel">新建服务器</h3>
+			  </div>
+			  <div class="modal-body">
+				  <div class="row">
+					  <div class="col-md-12">
+						  <div class="col-md-12">
+							  <table  class="table table-bordered table-striped table-hover dataTable">
+								  <tr ng-if="errorMsg.flag">
+									  <td>错误信息</td>
+									  <td style="color: red">
+										  {{errorMsg.message}}
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>服务器名称</td>
+									  <td>
+										  <input type="text" maxlength="16" ng-model="addServer.serverName" ng-blur="findByServerName()" class="form-control">
+										  <div id="error_serverName1"></div>
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>IP</td>
+									  <td>
+										  <input ng-model="addServer.ip" type="text" class="form-control">
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>端口号</td>
+									  <td>
+										  <input ng-model="addServer.port" type="text" class="form-control">
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>用户名</td>
+									  <td>
+										  <input ng-model="addServer.username" type="text" class="form-control">
+									  </td>
+								  </tr>
+								  <tr>
+									  <td>用户密码</td>
+									  <td>
+										  <input ng-model="addServer.password" type="password" class="form-control">
+									  </td>
+								  </tr>
+								  <tr style="display: none">
+									  <td>是否运行</td>
+									  <td>
+										  <select class="form-control" ng-model="addServer.flag">
+											  <option value="0" selected>不运行</option>
+											  <option value="1">运行</option>
+										  </select>
+									  </td>
+								  </tr>
+							  </table>
+							  <div class="modal-footer">
+								  <button class="btn btn-success" aria-hidden="true" ng-click="saveServer()">确定</button>
+								  <button class="btn btn-default" data-dismiss="modal" aria-hidden="true" ng-click="initAddServer()">关闭</button>
+							  </div>
+						  </div>
+					  </div>
+				  </div>
+			  </div>
+
+		  </div>
+	  </div>
+  </div>
+</body>
+<script>
+
+</script>
+</html>
