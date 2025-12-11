@@ -33,6 +33,7 @@ public class ApplyController {
 
     @RequestMapping("/findNewApply10Size")
     public List<Apply> findNewApply10Size(){
+        //aaa
         return applyService.findNewApply10Size();
     }
 }
