@@ -240,8 +240,8 @@
 
   </script>
   <script src="../../static/plugins/jquery/jquery.js"></script>
-  <!--<script src="https://webapi.amap.com/loader.js"></script>-->
-  <script src="http://192.168.0.32:8080/amap/AMap3.js"></script>
+  <script src="https://webapi.amap.com/loader.js"></script>
+<!--  <script src="http://192.168.0.32:8080/amap/AMap3.js"></script>-->
   <script src="http://192.168.0.32:8080/amap/2.0.1"></script>
   <script src="../../static/plugins/angularjs/angular.min.js"></script>
   <script src="../../static/js/base.js"></script>
@@ -256,8 +256,8 @@
   <script src="../../static/js/filter/dateFilter.js"></script>
 
 </head>
-<body ng-app="speed" ng-controller="indexController" ng-init="initMap1()" style="padding: 0;margin: 0">
-<div id="map-container"></div>
+<body ng-app="speed" ng-controller="indexController" ng-init="initMap()" style="padding: 0;margin: 0">
+<div id="container"></div>
   <!--左折叠-->
   <div class="floating-left div3" ng-click="toggleSlide1()">
     <img src="../../static/images/left.png" id="left_img" alt="Image">
@@ -282,7 +282,7 @@
                 <li ng-repeat="subRegion in region.subRegionAndDeviceList">
                   <span ng-click="toggleNode(subRegion)">{{ subRegion.subRegion }}</span>
                   <ul ng-if="subRegion.deviceList" ng-show="subRegion.expanded">
-                    <li ng-repeat="device in subRegion.deviceList" ng-click="moveCameraTo1(device.longitude, device.dimension);openInfoWindow(device);">
+                    <li ng-repeat="device in subRegion.deviceList" ng-click="moveCameraTo(device.longitude, device.dimension);openInfoWindow(device);">
                       <span>{{ device.deviceName }}</span>
                     </li>
                   </ul>
