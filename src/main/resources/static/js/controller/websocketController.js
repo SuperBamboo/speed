@@ -154,6 +154,17 @@ app.controller('websocketController',function ($scope,userInfoService,$timeout,c
                             var audio = document.getElementById("audio_apply");
                             audio.play();
                         }
+                        if(parts[0] === '5'){
+                            //机内参数查询返回
+                            let nbDeviceParam = JSON.parse(parts[1]);
+                            var a = document.getElementById("iframe").contentWindow;
+                            var message = {
+                                type:2,
+                                data:nbDeviceParam
+                            }
+                            a.postMessage(message,"*");
+                            //console.log("机内参数查询返回:"+nbDeviceParam.deviceId+" : "+ nbDeviceParam.parameter);
+                        }
                         return;
                     }
                     //console.log('Received message from server:', event.data);

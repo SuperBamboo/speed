@@ -34,4 +34,6 @@ public interface PushAlarmService {
      * @return
      */
     List<PushAlarm> findNewAlarm10Size();
+
+    List<PushAlarm> findAllByDeviceIdAndDate(String deviceId, int serverId, String date1, String date2);
 }

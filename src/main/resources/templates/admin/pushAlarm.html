@@ -19,6 +19,7 @@
 	<!--angularjs-->
 	<script type="text/javascript" src="../../static/plugins/admin/angularjs/angular.min.js"></script>
 
+
 	<!-- 分页插件开始 -->
 	<script src="../../static/plugins/admin/angularjs/pagination.js"></script>
 	<link rel="stylesheet" href="../../static/plugins/admin/angularjs/pagination.css">
@@ -32,6 +33,7 @@
 	<script src="../../static/js/base_pagination.js"></script>
 	<script src="../../static/js/service/alarmService.js"></script>
 	<script src="../../static/js/service/regionService.js"></script>
+	<script src="../../static/js/service/deviceService.js"></script>
 	<!--<script src="./js/service/socketService.js"></script>
 	<script src="./js/service/alarmService.js"></script>
 	<script src="./js/service/deviceCtrlModeService.js"></script>
@@ -50,145 +52,393 @@
 			padding-right: 10px;
 		}
 	</style>
-    
+	<style>
+		.spinning {
+			animation: spin 1s infinite linear;
+		}
+		@keyframes spin {
+			from { transform: rotate(0deg); }
+			to { transform: rotate(360deg); }
+		}
+		.dropdown-item:hover {
+			background-color: #f5f5f5;
+		}
+		.dropdown-item.active {
+			background-color: #337ab7;
+			color: white;
+		}
+		.dropdown-item.active .text-muted {
+			color: #fff !important;
+		}
+		.highlight {
+			background-color: #ffeb3b;
+			font-weight: bold;
+			padding: 0 2px;
+		}
+	</style>
+
 </head>
 <body class="hold-transition skin-red sidebar-mini" ng-app="speed" ng-controller="alarmController">
-  <!-- .box-body -->
-                    <div class="box-header with-border">
-                        <h3 class="box-title">报警管理</h3>
-                    </div>
+<!-- .box-body -->
+<div class="box-header with-border">
+	<h3 class="box-title">报警管理</h3>
+</div>
 
-                    <div class="box-body">
+<div class="box-body">
 
-                        <!-- 数据表格 -->
-                        <div class="table-box">
+	<!-- 数据表格 -->
+	<div class="table-box">
 
-                            <!--工具栏-->
-                            <div class="pull-left">
-                                <div class="form-group form-inline">
-                                    <div class="btn-group">
-                                        <button type="button" class="btn btn-default" title="导出" ng-click="exportToExcel();"><i class="fa fa-refresh"></i> 导出</button>
-                                        <button type="button" class="btn btn-default" title="导出" ng-click="updateCheckAll();"><i class="fa fa-refresh"></i> 一键已读</button>
-                                        <button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="display: none" class="box-tools pull-right">
-                                <div class="has-feedback">
-									<form class="form-inline">
-										<div class="form-group">
-											<label> 区域:</label>
-											<select s class="form-control" ng-options="region.regionName as region.regionName for region in regionList" ng-change="updateSubRegion()"
-													ng-model="searchAlarm.ofRegionName">
-											</select>
-										</div>
-										<div class="form-group" >
-											<label> 子区: </label>
-											<select class="form-control" ng-options="subRegion for subRegion in subRegionList"
-													ng-model="searchAlarm.ofSubregionName">
-											</select>
-										</div>
-										<div class="form-group">
-											<label> 设备名称: </label>
-											<input type="text" class="form-control" ng-model = "searchAlarm.deviceName">
-										</div>
-										<div class="form-group">
-											<label> 报警时间: </label>
-											<input type="date" class="form-control" ng-model = "searchAlarm.occurDate">
-										</div>
-										<button class="btn btn-default" ng-click="initSearchAlarm()">清空</button>
-										<button class="btn btn-default" ng-click="search(1,paginationConf.itemsPerPage)">查询</button>
-									</form>
-                                </div>
-                            </div >
-							<div class="box-tools pull-right">
-								<div class="has-feedback">
-									<form class="form-inline">
-										<div class="form-group" style="width: auto">
-											<label>服务器:</label>
-											<select style="width: auto" class="form-control"
-													ng-options="server.serverName for server in serverList track by server.id"
-													ng-model="selectedServer">
-												<option value="">全部</option>
-											</select>
-										</div>
-										<div class="form-group">
-											<label>区域:</label>
-											<select style="width: auto;padding-right: 15px" class="form-control"
-													ng-options="region for region in regionList1"
-													ng-model="searchAlarm1.region"
-													ng-disabled="!selectedServer">
-												<option value="">全部</option>
-											</select>
-										</div>
-										<div class="form-group">
-											<label>子区: </label>
-											<select class="form-control"
-													ng-options="subRegion for subRegion in subRegionList1"
-													ng-model="searchAlarm1.subregion"
-													ng-disabled="!searchAlarm1.region">
-												<option value="">全部</option>
-											</select>
-										</div>
-										<div class="form-group">
-											<label>设备名称</label>
-											<input type="text" class="form-control" ng-model="searchAlarm1.deviceName" placeholder="输入设备名称">
-										</div>
-										<div class="form-group">
-											<label> 报警时间: </label>
-											<input type="date" class="form-control" ng-model = "searchAlarm1.occurDate">--
-											<input type="date" class="form-control" ng-model = "searchAlarm1.alarmDesc">
-										</div>
-										<button type="button" class="btn btn-default" ng-click="initSearchAlarm()">清空</button>
-										<button type="button" class="btn btn-primary" ng-click="search(1, paginationConf.itemsPerPage)">查询</button>
-									</form>
+		<!--工具栏-->
+		<div class="pull-left">
+			<div class="form-group form-inline">
+				<div class="btn-group">
+					<button type="button" class="btn btn-default" title="导出" ng-click="initSearchAlarm();initData2();" data-toggle="modal" data-target="#editModal" ><i class="fa fa-refresh"></i> 导出</button>
+					<button type="button" class="btn btn-default" title="导出"  ng-click="updateCheckAll();"><i class="fa fa-refresh"></i> 一键已读</button>
+					<button type="button" class="btn btn-default" title="刷新" onclick="window.location.reload();"><i class="fa fa-refresh"></i> 刷新</button>
+				</div>
+			</div>
+		</div>
+		<div style="display: none" class="box-tools pull-right">
+			<div class="has-feedback">
+				<form class="form-inline">
+					<div class="form-group">
+						<label> 区域:</label>
+						<select  class="form-control" ng-options="region.regionName as region.regionName for region in regionList" ng-change="updateSubRegion()"
+								ng-model="searchAlarm.ofRegionName">
+						</select>
+					</div>
+					<div class="form-group" >
+						<label> 子区: </label>
+						<select class="form-control" ng-options="subRegion for subRegion in subRegionList"
+								ng-model="searchAlarm.ofSubregionName">
+						</select>
+					</div>
+					<div class="form-group">
+						<label> 设备名称: </label>
+						<input type="text" class="form-control" ng-model = "searchAlarm.deviceName">
+					</div>
+					<div class="form-group">
+						<label> 报警时间: </label>
+						<input type="date" class="form-control" ng-model = "searchAlarm.occurDate">
+					</div>
+					<button class="btn btn-default" ng-click="initSearchAlarm()">清空</button>
+					<button class="btn btn-default" ng-click="search(1,paginationConf.itemsPerPage)">查询</button>
+				</form>
+			</div>
+		</div >
+		<div class="box-tools pull-right">
+			<div class="has-feedback">
+				<form class="form-inline">
+					<div class="form-group" style="width: auto">
+						<label>服务器:</label>
+						<select style="width: auto" class="form-control"
+								ng-options="server.serverName for server in serverList track by server.id"
+								ng-model="selectedServer">
+							<option value="">全部</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>区域:</label>
+						<select style="width: auto;padding-right: 15px" class="form-control"
+								ng-options="region for region in regionList1"
+								ng-model="searchAlarm1.region"
+								ng-disabled="!selectedServer">
+							<option value="">全部</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>子区: </label>
+						<select class="form-control"
+								ng-options="subRegion for subRegion in subRegionList1"
+								ng-model="searchAlarm1.subregion"
+								ng-disabled="!searchAlarm1.region">
+							<option value="">全部</option>
+						</select>
+					</div>
+					<div class="form-group">
+						<label>设备名称</label>
+						<input type="text" class="form-control" ng-model="searchAlarm1.deviceName" placeholder="输入设备名称">
+					</div>
+					<div class="form-group">
+						<label> 报警时间: </label>
+						<input type="date" class="form-control" ng-model = "searchAlarm1.occurDate">--
+						<input type="date" class="form-control" ng-model = "searchAlarm1.alarmDesc">
+					</div>
+					<button type="button" class="btn btn-default" ng-click="initSearchAlarm()">清空</button>
+					<button type="button" class="btn btn-primary" ng-click="search(1, paginationConf.itemsPerPage)">查询</button>
+				</form>
+			</div>
+		</div>
+		<!--工具栏/-->
+
+		  <!--数据列表-->
+		  <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
+			  <thead>
+				  <tr>
+					  <th class="sorting_asc">报警编号</th>
+					  <th class="sorting">设备名称</th>
+					  <th class="sorting">所在区域</th>
+					  <th class="sorting">所在子区</th>
+					  <th class="sorting">设备类型</th>
+					  <th class="sorting">报警时间</th>
+					  <th class="sorting">报警描述</th>
+					  <th class="sorting">供应商</th>
+					  <th class="sorting">已读</th>
+					  <th class="text-center">操作</th>
+				  </tr>
+			  </thead>
+			  <tbody>
+				  <tr ng-repeat="alarm in list">
+					  <td>{{alarm.alarmNo}}</td>
+					  <td>{{alarm.deviceName}}</td>
+					  <td>{{alarm.ofRegionName}}</td>
+					  <td>{{alarm.ofSubregionName}}</td>
+					  <td>{{alarm.deviceModel}}</td>
+					  <td>{{(alarm.occurDate + alarm.occurTime) | customDateTime }}</td>
+					  <td>{{alarm.alarmDesc}}</td>
+					  <td>{{alarm.supplier}}</td>
+					  <td>{{alarm.isCheck == 'true'? "已读":"未处理"}}</td>
+					  <td class="text-center">
+						  <button type="button" ng-if="alarm.isCheck=='false' " class="btn bg-olive btn-xs" ng-click="updateCheck(alarm.id)">已读</button>
+					  </td>
+				  </tr>
+			  </tbody>
+		  </table>
+		  <!--数据列表/-->
+
+		<!-- 分页控件 -->
+		<tm-pagination conf="paginationConf"></tm-pagination>
+
+	</div>
+	<!-- 数据表格 /-->
+
+ </div>
+<!-- /.box-body -->
+
+<!-- 导出报警窗口 -->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" data-backdrop="static"
+	 aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-dialog" style="top: 0;width: 80%">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true"
+						ng-click="initData2()">×
+				</button>
+				<h3>报警信息导出</h3>
+			</div>
+			<!--手动管控/程式管控按钮-->
+			<div class="modal-body">
+				<div  class="row" style="display: flex;">
+					<div class="col-md-12">
+						<div style="display: flex">
+							<div class="col-md-12">
+								<table class="table table-bordered table-striped table-hover dataTable">
+									<tr ng-if="errorMsg.flag">
+										<td>错误信息</td>
+										<td style="color: red;text-align: center">
+											{{errorMsg.message}}
+										</td>
+									</tr>
+									<tr>
+										<td>导出条件</td>
+										<td>
+											<div class="box-tools pull-right">
+												<div class="has-feedback">
+													<form class="form-inline">
+														<div class="form-group" style="width: auto">
+															<label>服务器:</label>
+															<select style="width: auto" class="form-control"
+																	ng-options="server.serverName for server in serverList track by server.id"
+																	ng-model="selectedServer">
+																<option value="">全部</option>
+															</select>
+														</div>
+														<div class="form-group">
+															<label>区域:</label>
+															<select style="width: auto;padding-right: 15px" class="form-control"
+																	ng-options="region for region in regionList1"
+																	ng-model="searchAlarm1.region"
+																	ng-disabled="!selectedServer">
+																<option value="">全部</option>
+															</select>
+														</div>
+														<div class="form-group">
+															<label>子区: </label>
+															<select class="form-control"
+																	ng-options="subRegion for subRegion in subRegionList1"
+																	ng-model="searchAlarm1.subregion"
+																	ng-disabled="!searchAlarm1.region">
+																<option value="">全部</option>
+															</select>
+														</div>
+														<div class="form-group" style="display: none">
+															<label>设备名称</label>
+															<input type="text" class="form-control" ng-model="searchAlarm1.deviceName" placeholder="输入设备名称">
+														</div>
+														<div class="form-group" style="position: relative;">
+															<label>设备名称</label>
+															<div class="input-group">
+																<input type="text"
+																	   class="form-control"
+																	   ng-model="searchText"
+																	   ng-input="onInputChange()"
+																	   ng-keydown="onKeyDown($event)"
+																	   ng-focus="onFocus()"
+																	   ng-blur="hideDropdown()"
+																	   placeholder="输入至少2个字符进行搜索"
+																	   autocomplete="off">
+																<span class="input-group-addon" ng-if="searching">
+            <span class="glyphicon glyphicon-refresh spinning"></span>
+        </span>
+															</div>
+
+															<!-- 自定义下拉框 - 只显示deviceName -->
+															<div class="dropdown-menu"
+																 ng-show="showDropdown && (devices.length > 0 || searching || (searchText.length >= 2 && !searching && devices.length === 0))"
+																 style="display: block; position: absolute; width: 100%; max-height: 300px; overflow-y: auto; z-index: 1000; background: white; border: 1px solid #ccc; border-radius: 4px; margin-top: 2px; padding: 5px 0; box-shadow: 0 6px 12px rgba(0,0,0,.175);">
+
+																<!-- 加载提示 -->
+																<div class="text-center" ng-if="searching" style="padding: 15px;">
+																	<span class="glyphicon glyphicon-refresh spinning"></span> 搜索中...
+																</div>
+
+																<!-- 搜索结果 - 只显示deviceName -->
+																<div ng-repeat="device in devices"
+																	 class="dropdown-item"
+																	 ng-class="{'active': $index === selectedIndex}"
+																	 ng-mouseenter="setSelectedIndex($index)"
+																	 ng-mouseleave="clearSelectedIndex()"
+																	 ng-mousedown="selectDevice(device, $event)"
+																	 style="padding: 10px 15px; cursor: pointer; border-bottom: 1px solid #f5f5f5;">
+																	<div>
+																		<strong>{{device.deviceName}}</strong>
+																		<!-- 可以添加设备编号作为辅助信息，但主要显示名称 -->
+																		<small class="text-muted" style="margin-left: 10px;">{{device.deviceId}}</small>
+																	</div>
+																</div>
+
+																<!-- 无结果提示 -->
+																<div class="text-center" ng-if="!searching && devices.length === 0 && searchText.length >= 2" style="padding: 20px;">
+																	<span class="glyphicon glyphicon-search" style="font-size: 24px; color: #ccc; display: block; margin-bottom: 10px;"></span>
+																	<span class="text-muted">未找到匹配的设备 "{{searchText}}"</span>
+																</div>
+															</div>
+														</div>
+													</form>
+												</div>
+											</div>
+										</td>
+									</tr>
+
+									<tr>
+										<td>导出条件</td>
+										<td>
+											<div class="box-tools pull-right">
+												<div class="has-feedback">
+													<form class="form-inline">
+														<div class="form-group" style="display: none">
+															<label>报警类型: </label>
+															<select class="form-control" ng-model="searchAlarm1.alarmType">
+																<option value="-1">全部</option>
+																<option value="0">管控</option>
+																<option value="1">1</option>
+																<option value="2">2</option>
+																<option value="3">拥堵</option>
+																<option value="4">畅通</option>
+																<option value="5">倒伏</option>
+																<option value="6">倾斜</option>
+																<option value="7">欠压</option>
+																<option value="8">手动</option>
+																<option value="9">9</option>
+																<option value="99">其它</option>
+															</select>
+														</div >
+														<div class="form-group">
+															<label> 报警时间: </label>
+															<input type="date" class="form-control" ng-model = "searchAlarm1.occurDate">--
+															<input type="date" class="form-control" ng-model = "searchAlarm1.alarmDesc">
+														</div>
+														<button type="button" class="btn btn-default" ng-click="initSearchAlarm()">清空</button>
+													</form>
+												</div>
+											</div>
+										</td>
+									</tr>
+
+
+
+									<tr>
+										<td>设备字段</td>
+										<td>
+											<div class="row">
+												<div class="col-md-2">报警编号</div>
+												<div class="col-md-2">设备ID</div>
+												<div class="col-md-2">设备名称</div>
+												<div class="col-md-2">区域</div>
+												<div class="col-md-2">子区</div>
+												<div class="col-md-2">规格型号</div>
+											</div>
+										</td>
+									</tr>
+
+									<tr>
+										<td>是否显示</td>
+										<td>
+											<div class="row">
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.alarmNo"></div>
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.deviceId"></div>
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.deviceName"></div>
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.region"></div>
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.subregion"></div>
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.deviceModel"></div>
+											</div>
+										</td>
+									</tr>
+
+									<tr>
+										<td>设备字段</td>
+										<td>
+											<div class="row">
+												<div class="col-md-2">供应商</div>
+												<div class="col-md-2">经度</div>
+												<div class="col-md-2">纬度</div>
+												<div class="col-md-2">发生时间</div>
+												<div class="col-md-2">报警描述</div>
+											</div>
+										</td>
+									</tr>
+
+									<tr>
+										<td>是否显示</td>
+										<td>
+											<div class="row">
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.supplier"></div>
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.longitude"></div>  <!-- 修改这里 -->
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.dimension"></div>  <!-- 修改这里 -->
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.occurDateTime"></div>  <!-- 修改这里 -->
+												<div class="col-md-2"><input type="checkbox" ng-model="showFields.alarmDesc"></div>
+											</div>
+										</td>
+									</tr>
+								</table>
+								<div class="modal-footer">
+									<button class="btn btn-success" aria-hidden="true" ng-click="exportToExcel()">确认导出
+									</button>
+									<button class="btn btn-default" data-dismiss="modal" aria-hidden="true"
+											ng-click="initData2()">关闭
+									</button>
 								</div>
 							</div>
-                            <!--工具栏/-->
+						</div>
 
-			                  <!--数据列表-->
-			                  <table id="dataList" class="table table-bordered table-striped table-hover dataTable">
-			                      <thead>
-			                          <tr>
-										  <th class="sorting_asc">报警编号</th>
-									      <th class="sorting">设备名称</th>
-									      <th class="sorting">所在区域</th>
-									      <th class="sorting">所在子区</th>
-										  <th class="sorting">设备类型</th>
-										  <th class="sorting">报警时间</th>
-										  <th class="sorting">报警描述</th>
-									      <th class="sorting">供应商</th>
-									      <th class="sorting">已读</th>
-					                      <th class="text-center">操作</th>
-			                          </tr>
-			                      </thead>
-			                      <tbody>
-			                          <tr ng-repeat="alarm in list">
-				                          <td>{{alarm.alarmNo}}</td>
-									      <td>{{alarm.deviceName}}</td>
-									      <td>{{alarm.ofRegionName}}</td>
-									      <td>{{alarm.ofSubregionName}}</td>
-									      <td>{{alarm.deviceModel}}</td>
-									      <td>{{(alarm.occurDate + alarm.occurTime) | customDateTime }}</td>
-										  <td>{{alarm.alarmDesc}}</td>
-										  <td>{{alarm.supplier}}</td>
-										  <td>{{alarm.isCheck == 'true'? "已读":"未处理"}}</td>
-		                                  <td class="text-center">
-		                                 	  <button type="button" ng-if="alarm.isCheck=='false' " class="btn bg-olive btn-xs" ng-click="updateCheck(alarm.id)">已读</button>
-		                                  </td>
-			                          </tr>
-			                      </tbody>
-			                  </table>
-			                  <!--数据列表/-->
+					</div>
+				</div>
+			</div>
 
-							<!-- 分页控件 -->
-							<tm-pagination conf="paginationConf"></tm-pagination>
-
-                        </div>
-                        <!-- 数据表格 /-->
-                        
-                     </div>
-                    <!-- /.box-body -->
+		</div>
+	</div>
+</div>
 </body>
 <script>
 

@@ -1,4 +1,4 @@
-app.controller('deviceController', function ($scope, $controller, deviceService, sessionService,displayService,parameterService, planParamService,socketService, $location, $timeout,planModeService, alarmService, warningToneService,regionService, regionDeviceTypeService,deviceCtrlModeService, portService) {
+app.controller('deviceController', function ($scope, $controller, deviceService, sessionService,displayService,parameterService, planParamService,socketService, $location, $timeout,planModeService, alarmService, warningToneService,regionService, regionDeviceTypeService,deviceCtrlModeService, portService,ctrlModeTypeService,lampGroupService,phaseService,planService) {
     $controller("baseController", {$scope: $scope});
 
     $scope.sessionId = null;
@@ -67,7 +67,7 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
                     console.log("deviceController :" + e.data.data.toString());
                     break;
                 case 2:
-                    $scope.alarmList = e.data.data;
+                    //$scope.alarmList = e.data.data;
                     break;
                 default:
                     break;
@@ -102,6 +102,10 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
     $scope.deviceCtrlModeList = [];
     $scope.planModeList = [];
     $scope.warningToneList = [];
+    $scope.ctrlModeTypeList = [];
+    $scope.lampGroupList = [];
+    $scope.phaseList = [];
+    $scope.planList = [];
     $scope.portList = [];
     $scope.portList1 = [];
     $scope.planParamList = [];
@@ -109,7 +113,13 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
     $scope.selectedPlanModeNo = "";
     $scope.selectedDeviceCtrlMode = {holdTimeHours:'',holdTimeMinutes:'',holdTimeSeconds:''};
     $scope.selectedPlanMode = {};
-    $scope.selectedWarningToneNo = "0";
+
+    $scope.lampGroupList = [];
+    $scope.selectedLampGroupNo = "";
+    $scope.phaseList = [];
+    $scope.selectedPhaseNo = "";
+    $scope.planList = [];
+    $scope.selectedPlanNo = "";
 
     const updateOther = function (a) {
         setCheckFalse();
@@ -122,6 +132,12 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
                 $scope.selectedDisplay = $scope.displayList[x];
             }
         }
+
+
+        $scope.selectedCtrlModeTypeNo = $scope.deviceCtrlModeList[a - 1].ctrlType;
+        $scope.selectedPhaseNo = $scope.deviceCtrlModeList[a - 1].phaseNo;
+        $scope.selectedPlanNo = $scope.deviceCtrlModeList[a - 1].planNo;
+        $scope.selectedLampGroupNo = $scope.deviceCtrlModeList[a - 1].coordLampNo;
 
         //获取持续时间时分秒
         var time1 = $scope.selectedDeviceCtrlMode.holdTime;
@@ -191,6 +207,8 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
     $scope.displayList = [];
     $scope.selectedDisplay = {};
     $scope.selectedDisplayNo = "";
+
+
 
     $scope.findDeviceCtrlModeByDeviceId = function (deviceId,serverId) {
         $scope.findDeviceByDeviceId(deviceId,serverId);
@@ -268,6 +286,20 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
                                 }
                             }
                         });
+                        ctrlModeTypeService.findByDeviceId(deviceId,serverId).success(function (response) {
+                            $scope.ctrlModeTypeList = response;
+                            lampGroupService.findByDeviceId(deviceId,serverId).success(function (response) {
+                                $scope.lampGroupList = response;
+                                phaseService.findByDeviceId(deviceId,serverId).success(function (response) {
+                                    $scope.phaseList = response;
+                                    planService.findByDeviceId(deviceId,serverId).success(function (response) {
+                                        $scope.planList = response;
+                                    });
+                                });
+
+                            });
+                        });
+
                     })
                 } else {
                     //没有手动管控
@@ -488,6 +520,22 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
         $scope.entity = {save: "false", auto: "false"};
         $scope.changeGKCard(1);
     }
+    $scope.initData2 = function () {
+        //关闭弹窗时初始化变量
+        $scope.selectedDevice = null;
+        $scope.showFields = {
+            deviceId: true,      // 默认选中
+            deviceName: true,    // 默认选中
+            region: true,        // 默认选中
+            subregion: true,     // 默认选中
+            deviceType: true,    // 默认选中
+            deviceModel: true,   // 默认选中
+            supplier: true,      // 默认选中
+            serviceDate: true,   // 默认选中
+            longitude: true,     // 默认选中
+            dimension: true      // 默认选中
+        };
+    }
 
     $scope.initWatch= function (){
         $scope.selectedDeviceCtrlModeNo = '';
@@ -574,6 +622,12 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
             volume: "",
             playInteval: "",
             playNumbers: "",
+            ctrlType: "",
+            phaseNo: "",
+            planNo: "",
+            cycleLen: "",
+            croodLampNo: "",
+            offset: "",
             holdTime: ""
         }
         deviceControlModeSet.deviceId = $scope.selectedDevice.deviceId;
@@ -664,6 +718,48 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
             }else {
                 $scope.errorMsg.flag = true;
                 $scope.errorMsg.message = '语音播报次数小于等于999';
+                return;
+            }
+        }
+        if($scope.selectedDeviceCtrlMode.ctrlTypeValidity === '1'){
+            deviceControlModeSet.ctrlType = $scope.selectedCtrlModeTypeNo;
+        }
+        if($scope.selectedDeviceCtrlMode.phaseNoValidity === '1'){
+            if($scope.selectedPhaseNo == "0"){
+                deviceControlModeSet.phaseNo = "1";
+            }else {
+                deviceControlModeSet.phaseNo = $scope.selectedPhaseNo;
+            }
+        }
+        if($scope.selectedDeviceCtrlMode.planNoValidity === '1'){
+            deviceControlModeSet.planNo = $scope.selectedPlanNo;
+        }
+        if($scope.selectedDeviceCtrlMode.cycleLenValidity === '1'){
+            // 正则表达式
+            let regex = /^(0|[1-9][0-9]?|1[0-9]{2}|2[0-3][0-9]|240)$/;
+            // 测试字符串
+            if(regex.test($scope.selectedDeviceCtrlMode.cycleLen)){
+                $scope.initErrorMsg();
+                deviceControlModeSet.cycleLen = $scope.selectedDeviceCtrlMode.cycleLen;
+            }else {
+                $scope.errorMsg.flag = true;
+                $scope.errorMsg.message = '总周期范围[0,240]';
+                return;
+            }
+        }
+        if($scope.selectedDeviceCtrlMode.coordLampNoValidity === '1'){
+            deviceControlModeSet.croodLampNo = $scope.selectedLampGroupNo;
+        }
+        if($scope.selectedDeviceCtrlMode.offSetValidity === '1'){
+            // 正则表达式
+            let regex = /^(0|[1-9][0-9]?|1[0-9]{2}|2[0-3][0-9]|240)$/;
+            // 测试字符串
+            if(regex.test($scope.selectedDeviceCtrlMode.offSet)){
+                $scope.initErrorMsg();
+                deviceControlModeSet.offset = $scope.selectedDeviceCtrlMode.offSet;
+            }else {
+                $scope.errorMsg.flag = true;
+                $scope.errorMsg.message = '协调相位差范围[0,240]';
                 return;
             }
         }
@@ -827,40 +923,95 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
 
     };
 
-    // 导出到 Excel 的函数（设备列表）
+
+    // 修改前的导出函数
     $scope.exportToExcel = function() {
-        deviceService.findAll().success(function (response) {
-            if (response != null && response.length > 0) {
-                var tableDataWithHeaders = [
-                    {
-                        设备ID: '设备ID',
-                        设备名称: '设备名称',
-                        区域: '区域',
-                        子区: '子区',
-                        设备类型: '设备类型',
-                        供应商: '供应商',
-                        检测日期: '检测日期',
-                        经度: '经度',
-                        纬度: '纬度'
+        // 获取查询参数
+        var searchParams = {
+            serverId: $scope.selectedServer ? $scope.selectedServer.id : null,
+            region: $scope.searchDevice1.region,
+            subregion: $scope.searchDevice1.subregion,
+            deviceType: $scope.searchDevice1.deviceType
+        };
+        //此处更换为searchDevice1的条件查询
+        if($scope.selectedServer!=null){
+            $scope.searchDevice.serverId = $scope.selectedServer.id;
+            if($scope.searchDevice1.region === ""){
+                $scope.searchDevice.ofRegionId = "全部";
+            }else {
+                $scope.searchDevice.ofRegionId = $scope.searchDevice1.region;
+            }
+            if( $scope.searchDevice1.subregion === ""){
+                $scope.searchDevice.ofSubRegionId = "全部";
+            }else {
+                $scope.searchDevice.ofSubRegionId = $scope.searchDevice1.subregion;
+            }
+            if($scope.searchDevice1.deviceType === ""){
+                $scope.searchDevice.deviceType = "全部";
+            }else {
+                $scope.searchDevice.deviceType = $scope.searchDevice1.deviceType;
+            }
+            $scope.searchDevice.deviceName = $scope.searchDevice1.deviceName;
+        }else {
+            $scope.searchDevice = {serverId:-1,ofRegionId:"全部",ofSubRegionId:"全部",deviceType:"全部",deviceName:""};
+        }
+
+        // 根据查询条件获取数据
+        deviceService.search(-1,-1,$scope.searchDevice).success(function (response) {
+            if (response != null && response.list.length > 0) {
+                // 获取用户勾选的字段
+                var selectedFields = $scope.getSelectedFields();
+
+                // 如果没有勾选任何字段，提示用户
+                if (Object.keys(selectedFields).length === 0) {
+                    alert('请至少选择一个要导出的字段');
+                    return;
+                }
+
+                // 创建新的工作簿
+                var wb = XLSX.utils.book_new();
+
+                // 创建空的工作表
+                var ws = XLSX.utils.aoa_to_sheet([]);
+
+                // 添加表头行（从第1行开始）
+                var headerRow = [];
+                var fieldKeys = [];
+                for (var key in selectedFields) {
+                    if (selectedFields[key]) {
+                        headerRow.push(getChineseFieldName(key));
+                        fieldKeys.push(key);
                     }
-                ];
-                response.forEach(function (device) {
-                    tableDataWithHeaders.push({
-                        设备ID: device.deviceId,
-                        设备名称: device.deviceName,
-                        区域: device.ofRegionId,
-                        子区: device.ofSubRegionId,
-                        设备类型: device.deviceModel,
-                        供应商: device.supplier,
-                        检测日期: device.serviceDate,
-                        经度: device.longitude,
-                        纬度: device.dimension
+                }
+                XLSX.utils.sheet_add_aoa(ws, [headerRow], {origin: "A1"});
+
+                // 添加数据行（从第2行开始）
+                var dataRows = [];
+                response.list.forEach(function (device) {
+                    var dataRow = [];
+                    fieldKeys.forEach(function(key) {
+                        dataRow.push(getDeviceFieldValue(device, key));
                     });
+                    dataRows.push(dataRow);
                 });
 
-                var wb = XLSX.utils.book_new();
-                var ws = XLSX.utils.json_to_sheet(tableDataWithHeaders, {skipHeader: true});
-                XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+                // 从A2开始添加数据
+                XLSX.utils.sheet_add_aoa(ws, dataRows, {origin: "A2"});
+
+                // 设置列宽
+                var wscols = [];
+                for (var i = 0; i < fieldKeys.length; i++) {
+                    wscols.push({wch: 15});
+                }
+                ws['!cols'] = wscols;
+
+                // 将工作表添加到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, '设备信息');
+
+                // 生成文件名
+                var fileName = generateFileName(searchParams);
+
+                // 导出文件
                 var wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'binary'});
 
                 function s2ab(s) {
@@ -870,66 +1021,243 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
                     return buf;
                 }
 
-                saveAs(new Blob([s2ab(wbout)], {type: 'application/octet-stream'}), '设备信息.xlsx');
+                saveAs(new Blob([s2ab(wbout)], {type: 'application/octet-stream'}), fileName);
 
+            } else {
+                alert('没有符合条件的数据可导出');
             }
-        })
+        }).error(function() {
+            alert('导出失败，请重试');
+        });
+    };
+
+
+
+    // 获取用户勾选的字段
+    $scope.getSelectedFields = function() {
+        var selectedFields = {};
+
+        // 只添加被选中的字段
+        if ($scope.showFields.deviceId) {
+            selectedFields.deviceId = true;
+        }
+        if ($scope.showFields.deviceName) {
+            selectedFields.deviceName = true;
+        }
+        if ($scope.showFields.region) {
+            selectedFields.region = true;
+        }
+        if ($scope.showFields.subregion) {
+            selectedFields.subregion = true;
+        }
+        if ($scope.showFields.deviceType) {
+            selectedFields.deviceType = true;
+        }
+        if ($scope.showFields.deviceModel) {
+            selectedFields.deviceModel = true;
+        }
+        if ($scope.showFields.supplier) {
+            selectedFields.supplier = true;
+        }
+        if ($scope.showFields.serviceDate) {
+            selectedFields.serviceDate = true;
+        }
+        if ($scope.showFields.longitude) {
+            selectedFields.longitude = true;
+        }
+        if ($scope.showFields.dimension) {
+            selectedFields.dimension = true;
+        }
+
+        return selectedFields;
+    };
+
+    // 获取字段的中文名称
+    function getChineseFieldName(fieldName) {
+        var fieldMap = {
+            'deviceId': '设备ID',
+            'deviceName': '设备名称',
+            'region': '区域',
+            'subregion': '子区',
+            'deviceType': '设备类型',
+            'deviceModel': '规格型号',
+            'supplier': '供应商',
+            'serviceDate': '投用日期',
+            'longitude': '经度',
+            'dimension': '纬度'
+        };
+        return fieldMap[fieldName] || fieldName;
+    }
+
+    // 获取设备字段值
+    function getDeviceFieldValue(device, fieldName) {
+        switch(fieldName) {
+            case 'deviceId':
+                return device.deviceId;
+            case 'deviceName':
+                return device.deviceName;
+            case 'region':
+                return device.ofRegionId;
+            case 'subregion':
+                return device.ofSubRegionId;
+            case 'deviceType':
+                return device.deviceType;
+            case 'deviceModel':
+                return device.deviceModel;
+            case 'supplier':
+                return device.supplier;
+            case 'serviceDate':
+                return device.serviceDate;
+            case 'longitude':
+                return device.longitude;
+            case 'dimension':
+                return device.dimension;
+            default:
+                return '';
+        }
+    }
+
+    // 生成文件名（包含查询条件）
+    function generateFileName(searchParams) {
+        var fileName = '设备信息';
+        if (searchParams.region) {
+            fileName += '_' + searchParams.region;
+        }
+        if (searchParams.subregion) {
+            fileName += '_' + searchParams.subregion;
+        }
+        if (searchParams.deviceType) {
+            fileName += '_' + searchParams.deviceType;
+        }
+        fileName += '_' + new Date().getTime() + '.xlsx';
+        return fileName;
+    }
+
+    function getTodayDate() {
+        const today = new Date();
+        return today.toISOString().split('T')[0];
+    }
+
+    // 获取两个月前的日期并显示
+    function getTwoMonthsAgo() {
+        const today = new Date();
+        const twoMonthsAgo = new Date(today);
+        twoMonthsAgo.setMonth(today.getMonth() - 2);
+        return twoMonthsAgo.toISOString().split('T')[0];
+    }
+    $scope.date1 = getTodayDate();
+    $scope.date2 = getTodayDate();
+
+    $scope.initDate = function (){
+        $scope.date1 = getTodayDate();
+        $scope.date2 = getTodayDate();
+    }
+
+    // 判断日期是否在最近两个月内（包含今天，向前推两个月）
+    function isWithinLastTwoMonths(dateStr) {
+        const inputDate = new Date(dateStr);
+        const today = new Date();
+        const twoMonthsAgo = new Date(today);
+        twoMonthsAgo.setMonth(today.getMonth() - 2);
+
+        // 清除时间部分，只比较日期
+        inputDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+        twoMonthsAgo.setHours(0, 0, 0, 0);
+
+        return inputDate >= twoMonthsAgo && inputDate <= today;
+    }
+
+    // 判断两个日期输入框，b是否大于a
+    function validateDateOrder(dateA, dateB) {
+        return dateB >= dateA;
+    }
+
+    //根据选中设备导出相关设备信息
+    $scope.exportToExcelByDeviceId = function (){
+        if(isWithinLastTwoMonths($scope.date1) && isWithinLastTwoMonths($scope.date2) && validateDateOrder($scope.date1,$scope.date2)){
+            alarmService.findAllByDeviceIdAndDate($scope.selectedDevice.deviceId,$scope.selectedDevice.serverId,$scope.date1,$scope.date2).success(function (response){
+                if (response != null && response.length > 0) {
+                    var tableDataWithHeaders = [
+                        {
+                            报警编号: '报警编号',
+                            设备名称: '设备名称',
+                            区域: '区域',
+                            子区: '子区',
+                            设备类型: '设备类型',
+                            供应商: '供应商',
+                            经度: '经度',
+                            纬度: '纬度',
+                            发生时间: '发生时间',
+                            报警类型: '报警类型',
+                            报警描述: '报警描述'
+                        }
+                    ];
+                    response.forEach(function (pushAlarm) {
+                        tableDataWithHeaders.push({
+                            报警编号: pushAlarm.alarmNo,
+                            设备名称: pushAlarm.deviceName,
+                            区域: pushAlarm.ofRegionName,
+                            子区: pushAlarm.ofSubregionName,
+                            设备类型: pushAlarm.deviceModel,
+                            供应商: pushAlarm.supplier,
+                            经度: pushAlarm.longitude,
+                            纬度: pushAlarm.dimension,
+                            发生时间: formatDateTime(pushAlarm.occurDate, pushAlarm.occurTime),
+                            报警类型: pushAlarm.alarmType,
+                            报警描述: pushAlarm.alarmDesc
+                        });
+                    });
+
+                    var wb = XLSX.utils.book_new();
+                    var ws = XLSX.utils.json_to_sheet(tableDataWithHeaders, {skipHeader: true});
+                    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+                    var wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'binary'});
+
+                    function s2ab(s) {
+                        var buf = new ArrayBuffer(s.length);
+                        var view = new Uint8Array(buf);
+                        for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+                        return buf;
+                    }
+
+                    saveAs(new Blob([s2ab(wbout)], {type: 'application/octet-stream'}), $scope.selectedDevice.deviceName+'报警信息.xlsx');
+
+                }
+            });
+        }else {
+            alert("日期输入有误！");
+        }
 
     }
 
-    //根据选中设备导出相关报警信息
-    $scope.exportToExcelByDeviceId = function (){
-        alarmService.findAllByDeviceId($scope.selectedDevice.deviceId,$scope.selectedDevice.serverId).success(function (response){
-            if (response != null && response.length > 0) {
-                var tableDataWithHeaders = [
-                    {
-                        报警编号: '报警编号',
-                        设备名称: '设备名称',
-                        区域: '区域',
-                        子区: '子区',
-                        设备类型: '设备类型',
-                        供应商: '供应商',
-                        经度: '经度',
-                        纬度: '纬度',
-                        发生日期: '发生日期',
-                        发生时间: '发生时间',
-                        报警类型: '报警类型',
-                        报警描述: '报警描述'
-                    }
-                ];
-                response.forEach(function (pushAlarm) {
-                    tableDataWithHeaders.push({
-                        报警编号: pushAlarm.alarmNo,
-                        设备名称: pushAlarm.deviceName,
-                        区域: pushAlarm.ofRegionName,
-                        子区: pushAlarm.ofSubregionName,
-                        设备类型: pushAlarm.deviceModel,
-                        供应商: pushAlarm.supplier,
-                        经度: pushAlarm.longitude,
-                        纬度: pushAlarm.dimension,
-                        发生日期: pushAlarm.occurDate,
-                        发生时间: pushAlarm.occurTime,
-                        报警类型: pushAlarm.alarmType,
-                        报警描述: pushAlarm.alarmDesc
-                    });
-                });
+    // 新增：格式化日期时间函数
+    function formatDateTime(dateStr, timeStr) {
+        if (!dateStr || !timeStr) {
+            return '';
+        }
 
-                var wb = XLSX.utils.book_new();
-                var ws = XLSX.utils.json_to_sheet(tableDataWithHeaders, {skipHeader: true});
-                XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-                var wbout = XLSX.write(wb, {bookType: 'xlsx', type: 'binary'});
+        // 将日期字符串从 YYYYMMDD 转换为 YYYY/MM/DD
+        var formattedDate = '';
+        if (dateStr.length === 8) {
+            formattedDate = dateStr.substring(0, 4) + '/' +
+                dateStr.substring(4, 6) + '/' +
+                dateStr.substring(6, 8);
+        } else {
+            formattedDate = dateStr;
+        }
 
-                function s2ab(s) {
-                    var buf = new ArrayBuffer(s.length);
-                    var view = new Uint8Array(buf);
-                    for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
-                    return buf;
-                }
+        // 将时间字符串从 HHMMSS 转换为 HH:MM:SS
+        var formattedTime = '';
+        if (timeStr.length === 6) {
+            formattedTime = timeStr.substring(0, 2) + ':' +
+                timeStr.substring(2, 4) + ':' +
+                timeStr.substring(4, 6);
+        } else {
+            formattedTime = timeStr;
+        }
 
-                saveAs(new Blob([s2ab(wbout)], {type: 'application/octet-stream'}), $scope.selectedDevice.deviceName+'报警信息.xlsx');
-
-            }
-        });
+        return formattedDate + ' ' + formattedTime;
     }
 
     // 更新所有下拉列表数据-----------------------new code-----------------------------------------------
@@ -1082,6 +1410,13 @@ app.controller('deviceController', function ($scope, $controller, deviceService,
 
       });
     };
+
+    //发送查询设备机内参数指令
+    $scope.findNBDeviceParamByDeviceId = function (deviceId, serverId) {
+        socketService.findNBDeviceParamByDeviceId($scope.sessionId,deviceId,serverId).success(function (response) {
+            window.location.href="admin/jsd_param.html";
+        });
+    }
 
     window.onload = function () {
         console.log("window.onload 执行了。。。")

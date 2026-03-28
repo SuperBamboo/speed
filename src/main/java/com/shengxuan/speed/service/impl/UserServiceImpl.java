@@ -1,10 +1,12 @@
 package com.shengxuan.speed.service.impl;
 
+import com.shengxuan.speed.entity.Logger;
 import com.shengxuan.speed.entity.RegionDeviceType;
 import com.shengxuan.speed.entity.User;
 import com.shengxuan.speed.entity.UserRegion;
 import com.shengxuan.speed.mapper.*;
 import com.shengxuan.speed.service.UserService;
+import com.shengxuan.speed.util.LoggerUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,12 +23,15 @@ public class UserServiceImpl implements UserService {
 
     private final RegionDeviceTypeMapper regionDeviceTypeMapper;
 
+    private final LoggerMapper loggerMapper;
 
-    public UserServiceImpl(UserMapper userMapper, PasswordEncoder passwordEncoder, UserRegionMapper userRegionMapper, RegionDeviceTypeMapper regionDeviceTypeMapper) {
+
+    public UserServiceImpl(UserMapper userMapper, PasswordEncoder passwordEncoder, UserRegionMapper userRegionMapper, RegionDeviceTypeMapper regionDeviceTypeMapper, LoggerMapper loggerMapper) {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRegionMapper = userRegionMapper;
         this.regionDeviceTypeMapper = regionDeviceTypeMapper;
+        this.loggerMapper = loggerMapper;
     }
 
     /**
@@ -42,9 +47,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public void deleteById(Integer id) {
         //先删除关联数据 user_region
+        User user = userMapper.findById(id);
         userRegionMapper.delByUserId(id);
         //2.再删除用户
         userMapper.delById(id);
+        Logger loggerByDesc = LoggerUtils.getLoggerByDesc(" 删除了用户 " + user.getUsername());
+        loggerMapper.add(loggerByDesc);
     }
 
     @Override
@@ -60,6 +68,9 @@ public class UserServiceImpl implements UserService {
                 userRegionMapper.add(userId,regionDeviceType.getRid());
             }
         }
+
+        Logger loggerByDesc = LoggerUtils.getLoggerByDesc(" 添加用户 " + user.getUsername());
+        loggerMapper.add(loggerByDesc);
     }
 
     @Override
@@ -67,6 +78,9 @@ public class UserServiceImpl implements UserService {
         //加密后修改
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userMapper.update(user);
+
+        Logger loggerByDesc = LoggerUtils.getLoggerByDesc(" 修改了用户" + user.getUsername());
+        loggerMapper.add(loggerByDesc);
     }
 
     @Override
@@ -100,6 +114,10 @@ public class UserServiceImpl implements UserService {
                 userRegionMapper.add(userId,regionDeviceTypeList.get(i).getRid());
             }
         }
+        User user = userMapper.findById(userId);
+
+        Logger loggerByDesc = LoggerUtils.getLoggerByDesc(" 修改了 " + user.getUsername() + " 区域权限");
+        loggerMapper.add(loggerByDesc);
 
     }
 

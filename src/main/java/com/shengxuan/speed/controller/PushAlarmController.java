@@ -33,6 +33,11 @@ public class PushAlarmController {
         return pushAlarmService.findAllByDeviceId(deviceId,serverId);
     }
 
+    @RequestMapping("/findAllByDeviceIdAndDate")
+    public List<PushAlarm> findAllByDeviceIdAndDate(String deviceId,int serverId,String date1,String date2){
+        return pushAlarmService.findAllByDeviceIdAndDate(deviceId,serverId,date1,date2);
+    }
+
     @RequestMapping("/search")
     public PageResult search(@RequestBody PushAlarm searchPushAlarm, int pageNo, int pageSize){
         return pushAlarmService.findPage(searchPushAlarm,pageNo,pageSize);

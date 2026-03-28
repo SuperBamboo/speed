@@ -42,6 +42,120 @@ public class DeviceCtrlMode implements Serializable {
 
     private Server server;
 
+    private String ctrlType;
+    private String ctrlTypeValidity;
+
+    private String phaseNo;
+    private String phaseNoValidity;
+
+    private String planNo;
+    private String planNoValidity;
+
+    private String cycleLen;
+    private String cycleLenValidity;
+
+    private String coordLampNo;
+    private String coordLampNoValidity;
+
+    private String offSet;
+    private String offSetValidity;
+
+    public String getCtrlType() {
+        return ctrlType;
+    }
+
+    public void setCtrlType(String ctrlType) {
+        this.ctrlType = ctrlType;
+    }
+
+    public String getCtrlTypeValidity() {
+        return ctrlTypeValidity;
+    }
+
+    public void setCtrlTypeValidity(String ctrlTypeValidity) {
+        this.ctrlTypeValidity = ctrlTypeValidity;
+    }
+
+    public String getPhaseNo() {
+        return phaseNo;
+    }
+
+    public void setPhaseNo(String phaseNo) {
+        this.phaseNo = phaseNo;
+    }
+
+    public String getPhaseNoValidity() {
+        return phaseNoValidity;
+    }
+
+    public void setPhaseNoValidity(String phaseNoValidity) {
+        this.phaseNoValidity = phaseNoValidity;
+    }
+
+    public String getPlanNo() {
+        return planNo;
+    }
+
+    public void setPlanNo(String planNo) {
+        this.planNo = planNo;
+    }
+
+    public String getPlanNoValidity() {
+        return planNoValidity;
+    }
+
+    public void setPlanNoValidity(String planNoValidity) {
+        this.planNoValidity = planNoValidity;
+    }
+
+    public String getCycleLen() {
+        return cycleLen;
+    }
+
+    public void setCycleLen(String cycleLen) {
+        this.cycleLen = cycleLen;
+    }
+
+    public String getCycleLenValidity() {
+        return cycleLenValidity;
+    }
+
+    public void setCycleLenValidity(String cycleLenValidity) {
+        this.cycleLenValidity = cycleLenValidity;
+    }
+
+    public String getCoordLampNo() {
+        return coordLampNo;
+    }
+
+    public void setCoordLampNo(String coordLampNo) {
+        this.coordLampNo = coordLampNo;
+    }
+
+    public String getCoordLampNoValidity() {
+        return coordLampNoValidity;
+    }
+
+    public void setCoordLampNoValidity(String coordLampNoValidity) {
+        this.coordLampNoValidity = coordLampNoValidity;
+    }
+
+    public String getOffSet() {
+        return offSet;
+    }
+
+    public void setOffSet(String offSet) {
+        this.offSet = offSet;
+    }
+
+    public String getOffSetValidity() {
+        return offSetValidity;
+    }
+
+    public void setOffSetValidity(String offSetValidity) {
+        this.offSetValidity = offSetValidity;
+    }
+
     public Server getServer() {
         return server;
     }

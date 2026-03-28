@@ -97,6 +97,9 @@ public class PushAlarmSqlProvider {
             if (pushAlarm.getOfSubregionName() != null && !pushAlarm.getOfSubregionName().isEmpty() && !"全部".equals(pushAlarm.getOfSubregionName())) {
                 WHERE(" of_subregion_name = #{pushAlarm.ofSubregionName}");
             }
+            if(pushAlarm.getAlarmType() != null  && !pushAlarm.getAlarmType().isEmpty() && !"全部".equals(pushAlarm.getAlarmType()) && pushAlarm.getAlarmType()!= "-1"){
+                WHERE(" alarm_type = #{pushAlarm.alarmType}");
+            }
             if (pushAlarm.getOccurDate() != null && !pushAlarm.getOccurDate().isEmpty()) {
                 WHERE(" occur_date >= #{pushAlarm.occurDate}");
             }

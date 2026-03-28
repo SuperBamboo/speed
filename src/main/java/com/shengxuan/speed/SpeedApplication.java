@@ -5,6 +5,7 @@ import com.shengxuan.speed.entity.Server;
 import com.shengxuan.speed.mapper.*;
 import com.shengxuan.speed.socket.Client;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -59,13 +60,20 @@ public class SpeedApplication {
         private final DevicePlanModeApplyMapper devicePlanModeApplyMapper;
         private final PlanParamApplyMapper planParamApplyMapper;
         private final RegionDeviceTypeMapper regionDeviceTypeMapper;
+        private final CtrlModeTypeMapper ctrlModeTypeMapper;
 
         private UserRegionMapper userRegionMapper;
+
+        private final LampGroupMapper lampGroupMapper;
+
+        private final PhaseMapper phaseMapper;
+
+        private final PlanMapper planMapper;
         public static List<Client>  clientList= new ArrayList();
 
         private final SpeedProperties speedProperties;
 
-        public MyApplicationRunner(UserRegionMapper userRegionMapper,ServerMapper serverMapper, DeviceMapper deviceMapper, WarningToneMapper warningToneMapper, DisplayMapper displayMapper, AlarmMapper alarmMapper, DeviceCtrlModeMapper deviceCtrlModeMapper, PlanParamValueMapper planParamValueMapper, PlanParamMapper planParamMapper, PlanModeMapper planModeMapper, ParameterMapper parameterMapper, PortMapper portMapper, PushAlarmMapper pushAlarmMapper, RegionMapper regionMapper, DeviceControlModeApplyMapper deviceControlModeApplyMapper, DevicePlanModeApplyMapper devicePlanModeApplyMapper, PlanParamApplyMapper planParamApplyMapper, WebSocketHandler webSocketHandler, RegionDeviceTypeMapper regionDeviceTypeMapper, SpeedProperties speedProperties) {
+        public MyApplicationRunner(UserRegionMapper userRegionMapper, ServerMapper serverMapper, DeviceMapper deviceMapper, WarningToneMapper warningToneMapper, DisplayMapper displayMapper, AlarmMapper alarmMapper, DeviceCtrlModeMapper deviceCtrlModeMapper, PlanParamValueMapper planParamValueMapper, PlanParamMapper planParamMapper, PlanModeMapper planModeMapper, ParameterMapper parameterMapper, PortMapper portMapper, PushAlarmMapper pushAlarmMapper, RegionMapper regionMapper, DeviceControlModeApplyMapper deviceControlModeApplyMapper, DevicePlanModeApplyMapper devicePlanModeApplyMapper, PlanParamApplyMapper planParamApplyMapper, WebSocketHandler webSocketHandler, RegionDeviceTypeMapper regionDeviceTypeMapper, SpeedProperties speedProperties, CtrlModeTypeMapper ctrlModeTypeMapper, LampGroupMapper lampGroupMapper, PhaseMapper phaseMapper, PlanMapper planMapper) {
             this.userRegionMapper = userRegionMapper;
             this.serverMapper = serverMapper;
             this.deviceMapper = deviceMapper;
@@ -86,6 +94,10 @@ public class SpeedApplication {
             this.webSocketHandler = webSocketHandler;
             this.regionDeviceTypeMapper = regionDeviceTypeMapper;
             this.speedProperties = speedProperties;
+            this.ctrlModeTypeMapper = ctrlModeTypeMapper;
+            this.lampGroupMapper = lampGroupMapper;
+            this.phaseMapper = phaseMapper;
+            this.planMapper = planMapper;
         }
 
         @Override
@@ -97,7 +109,7 @@ public class SpeedApplication {
 
             //0.程序一启动就先启动主服务器
             Client client = new Client(0,speedProperties.getIp(), speedProperties.getPort(), speedProperties.getUsername(), speedProperties.getPassword(),
-                    deviceMapper, warningToneMapper,displayMapper,alarmMapper,deviceCtrlModeMapper,planParamValueMapper,planParamMapper,planModeMapper,parameterMapper,portMapper,pushAlarmMapper,regionMapper,deviceControlModeApplyMapper,devicePlanModeApplyMapper,planParamApplyMapper,regionDeviceTypeMapper,userRegionMapper,webSocketHandler);
+                    deviceMapper, warningToneMapper,displayMapper,alarmMapper,deviceCtrlModeMapper,planParamValueMapper,planParamMapper,planModeMapper,parameterMapper,portMapper,pushAlarmMapper,regionMapper,deviceControlModeApplyMapper,devicePlanModeApplyMapper,planParamApplyMapper,regionDeviceTypeMapper,userRegionMapper,ctrlModeTypeMapper,lampGroupMapper,phaseMapper,planMapper,webSocketHandler);
             client.start();
             clientList.add(client);
             //2.查询数据库查询server
@@ -105,7 +117,7 @@ public class SpeedApplication {
             for (Server server : serverList) {
                 if(server.getIp()!=null && server.getPort()!=0 && !Objects.equals(server.getUsername(), "") && !Objects.equals(server.getPassword(), "")){
                     Client client1 = new Client(server.getId(),server.getIp(),server.getPort(),server.getUsername(),server.getPassword(),
-                            deviceMapper, warningToneMapper,displayMapper,alarmMapper,deviceCtrlModeMapper,planParamValueMapper,planParamMapper,planModeMapper,parameterMapper,portMapper,pushAlarmMapper,regionMapper,deviceControlModeApplyMapper,devicePlanModeApplyMapper,planParamApplyMapper,regionDeviceTypeMapper,userRegionMapper,webSocketHandler);
+                            deviceMapper, warningToneMapper,displayMapper,alarmMapper,deviceCtrlModeMapper,planParamValueMapper,planParamMapper,planModeMapper,parameterMapper,portMapper,pushAlarmMapper,regionMapper,deviceControlModeApplyMapper,devicePlanModeApplyMapper,planParamApplyMapper,regionDeviceTypeMapper,userRegionMapper,ctrlModeTypeMapper,lampGroupMapper,phaseMapper,planMapper,webSocketHandler);
                     client1.start();
                     clientList.add(client1);
                     //修改该服务器启动状态为运行

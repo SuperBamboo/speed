@@ -28,6 +28,18 @@ public interface DeviceCtrlModeMapper {
             @Result(property ="playIntevalValidity",column = "play_inteval_validity"),
             @Result(property ="playNumbers",column = "play_numbers"),
             @Result(property ="playNumbersValidity",column = "play_numbers_validity"),
+            @Result(property ="ctrlType",column = "ctrl_type"),
+            @Result(property ="ctrlTypeValidity",column = "ctrl_type_validity"),
+            @Result(property ="phaseNo",column = "phase_no"),
+            @Result(property ="phaseNoValidity",column = "phase_no_validity"),
+            @Result(property ="planNo",column = "plan_no"),
+            @Result(property ="planNoValidity",column = "plan_no_validity"),
+            @Result(property ="cycleLen",column = "cycle_len"),
+            @Result(property ="cycleLenValidity",column = "cycle_len_validity"),
+            @Result(property ="coordLampNo",column = "coord_lamp_no"),
+            @Result(property ="coordLampNoValidity",column = "coord_lamp_no_validity"),
+            @Result(property ="offSet",column = "off_set"),
+            @Result(property ="offSetValidity",column = "off_set_validity"),
             @Result(property ="holdTime",column = "hold_time"),
             @Result(property ="holdTimeValidity",column = "hold_time_validity")
     })
@@ -35,8 +47,8 @@ public interface DeviceCtrlModeMapper {
     @Select("select device_ctrl_mode_name from device_ctrl_mode where device_id = #{deviceId} and device_ctrl_mode_no = #{deviceCtrlModeNo} and server_id = #{serverId}")
     String findNameByDeviceIdAndCtrlNo(@Param("deviceId") String deviceId,@Param("deviceCtrlModeNo") String deviceCtrlModeNo,@Param("serverId")int serverId);
 
-    @Insert("insert into device_ctrl_mode(device_id,server_id,device_ctrl_mode_no,device_ctrl_mode_name,relay_stau,relay_stau_validity,relay_stau1,relay_stau1_validity,display_no,display_no_validity,warning_tone_no,warning_tone_no_validity,volume,volume_validity,play_inteval,play_inteval_validity,play_numbers,play_numbers_validity,hold_time,hold_time_validity) " +
-            "values(#{deviceId},#{serverId},#{deviceCtrlModeNo},#{deviceCtrlModeName},#{relayStau},#{relayStauValidity},#{relayStau1},#{relayStau1Validity},#{displayNo},#{displayNoValidity},#{warningToneNo},#{warningToneNoValidity},#{volume},#{volumeValidity},#{playInteval},#{playIntevalValidity},#{playNumbers},#{playNumbersValidity},#{holdTime},#{holdTimeValidity})")
+    @Insert("insert into device_ctrl_mode(device_id,server_id,device_ctrl_mode_no,device_ctrl_mode_name,relay_stau,relay_stau_validity,relay_stau1,relay_stau1_validity,display_no,display_no_validity,warning_tone_no,warning_tone_no_validity,volume,volume_validity,play_inteval,play_inteval_validity,play_numbers,play_numbers_validity,hold_time,hold_time_validity,ctrl_type,ctrl_type_validity,phase_no,phase_no_validity,plan_no,plan_no_validity,cycle_len,cycle_len_validity,coord_lamp_no,coord_lamp_no_validity,off_set,off_set_validity) " +
+            "values(#{deviceId},#{serverId},#{deviceCtrlModeNo},#{deviceCtrlModeName},#{relayStau},#{relayStauValidity},#{relayStau1},#{relayStau1Validity},#{displayNo},#{displayNoValidity},#{warningToneNo},#{warningToneNoValidity},#{volume},#{volumeValidity},#{playInteval},#{playIntevalValidity},#{playNumbers},#{playNumbersValidity},#{holdTime},#{holdTimeValidity},#{ctrlType},#{ctrlTypeValidity},#{phaseNo},#{phaseNoValidity},#{planNo},#{planNoValidity},#{cycleLen},#{cycleLenValidity},#{coordLampNo},#{coordLampNoValidity},#{offSet},#{offSetValidity})")
     void add(DeviceCtrlMode deviceCtrlMode);
 
     @Delete("delete from device_ctrl_mode where device_id = #{deviceId} and server_id = #{serverId}")

@@ -81,7 +81,11 @@ public class DeviceServiceImpl implements DeviceService {
                 regionDeviceTypeList.add(byRid);
             }
         }
-        PageHelper.startPage(pageNo,pageSize);
+        if(pageNo == -1 && pageSize == -1){
+            //不需要条件查询
+        }else {
+            PageHelper.startPage(pageNo,pageSize);
+        }
         List<Device> list = deviceMapper.findByConditionAndPage(device,regionDeviceTypeList);
         for (Device device1 : list) {
             int serverId = device1.getServerId();
@@ -232,13 +236,13 @@ public class DeviceServiceImpl implements DeviceService {
             }
         }
         //再此直接转换经纬度传过去
-        for (Device device : deviceList) {
+        /*for (Device device : deviceList) {
             Map<String, Double> stringDoubleMap = CoordinateTransform.wgs84ToGcj02(Double.parseDouble(device.getLongitude()), Double.parseDouble(device.getDimension()));
             Double lng = stringDoubleMap.get("lng");
             Double lat = stringDoubleMap.get("lat");
             device.setLongitude(String.valueOf(lng));
             device.setDimension(String.valueOf(lat));
-        }
+        }*/
 
         //循环列表判断该设备是否有报警信息或者申请信息
         return deviceList;
@@ -290,7 +294,7 @@ public class DeviceServiceImpl implements DeviceService {
                 Set<String> allSubregion = new LinkedHashSet<String>();
                 //循环regionDeviceTypeList找到对应region下的subregion
                 for (RegionDeviceType regionDeviceType : regionDeviceTypeList) {
-                    if(regionDeviceType.getRegion().equals(region)){
+                    if(regionDeviceType.getRegion().equals(region) && Objects.equals(regionDeviceType.getServerId()+"", serverName.split("###===###")[0])){
                         allSubregion.add(regionDeviceType.getSubregion());
                     }
                 }
@@ -303,7 +307,7 @@ public class DeviceServiceImpl implements DeviceService {
                     subRegionAndDevice.setSubRegion(subRegion);
                     Set<String> allDeviceType = new LinkedHashSet<String>();
                     for (RegionDeviceType regionDeviceType : regionDeviceTypeList) {
-                        if(region.equals(regionDeviceType.getRegion()) && subRegion.equals(regionDeviceType.getSubregion())){
+                        if(region.equals(regionDeviceType.getRegion()) && subRegion.equals(regionDeviceType.getSubregion()) && Objects.equals(regionDeviceType.getServerId()+"", serverName.split("###===###")[0])){
                             allDeviceType.add(regionDeviceType.getDeviceType());
                         }
                     }
@@ -313,11 +317,11 @@ public class DeviceServiceImpl implements DeviceService {
                     List<Device> deviceList = deviceMapper.findByServerAndRegionAndSubRegionAndDeviceTypeList(Integer.parseInt(serverName.split("###===###")[0]),region,subRegion,deviceTypeList);
                     for (Device device : deviceList) {
                         //坐标转换
-                        Map<String, Double> stringDoubleMap = CoordinateTransform.wgs84ToGcj02(Double.parseDouble(device.getLongitude()), Double.parseDouble(device.getDimension()));
+                       /* Map<String, Double> stringDoubleMap = CoordinateTransform.wgs84ToGcj02(Double.parseDouble(device.getLongitude()), Double.parseDouble(device.getDimension()));
                         Double lng = stringDoubleMap.get("lng");
                         Double lat = stringDoubleMap.get("lat");
                         device.setLongitude(String.valueOf(lng));
-                        device.setDimension(String.valueOf(lat));
+                        device.setDimension(String.valueOf(lat));*/
                         int serverId = device.getServerId();
                         Server server;
                         if(serverId == 0){
@@ -337,6 +341,55 @@ public class DeviceServiceImpl implements DeviceService {
             }
             srsd.setRegionAndSubRegionAndDeviceList(list2);
             list.add(srsd);
+        }
+        if(list.get(0).getServer() != null && list.get(0).getServer() != null && list.get(0).getServer().length() > 0 ){
+            //判断旗下是否为空
+            List<RegionAndSubRegionAndDevice> regionAndSubRegionAndDeviceList = list.get(0).getRegionAndSubRegionAndDeviceList();
+            if(regionAndSubRegionAndDeviceList!=null && regionAndSubRegionAndDeviceList.size() == 0){
+                list.remove(0);
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<Device> findByConditionLike(Device device, String deviceNameLike) {
+        if(device!=null){
+            device.setDeviceName(deviceNameLike);
+            String deviceType = device.getDeviceType();
+            if("测速".equals(deviceType)){
+                device.setDeviceType("0");
+            } else if ("显示屏".equals(deviceType)) {
+                device.setDeviceType("1");
+            } else if ("警闪灯".equals(deviceType)) {
+                device.setDeviceType("2");
+            } else if ("移动灯".equals(deviceType)) {
+                device.setDeviceType("3");
+            } else if ("信号灯".equals(deviceType)) {
+                device.setDeviceType("4");
+            }
+        }
+        com.shengxuan.speed.entity.User user = findCurrentUser();
+        List<UserRegion> userRegionList = userRegionMapper.findByUserId(user.getId());
+        List<RegionDeviceType> regionDeviceTypeList = new ArrayList<>();
+        for (UserRegion userRegion : userRegionList) {
+            RegionDeviceType byRid = regionDeviceTypeMapper.findByRid(userRegion.getRid());
+            if(byRid!=null){
+                regionDeviceTypeList.add(byRid);
+            }
+        }
+        List<Device> list = deviceMapper.findByConditionAndPage(device,regionDeviceTypeList);
+        for (Device device1 : list) {
+            int serverId = device1.getServerId();
+            if(serverId == 0){
+                Server server = new Server();
+                server.setId(0);
+                server.setServerName("主服务器");
+                device1.setServer(server);
+            }else {
+                Server byId = serverMapper.findById(serverId);
+                device1.setServer(byId);
+            }
         }
         return list;
     }

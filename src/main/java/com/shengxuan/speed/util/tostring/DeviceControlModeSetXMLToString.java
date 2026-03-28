@@ -86,6 +86,24 @@ public class DeviceControlModeSetXMLToString {
             if(deviceControlModeSet.getPlayNumbers()!=null && deviceControlModeSet.getPlayNumbers()!="" && deviceControlModeSet.getPlayNumbers()!="null"){
                 deviceControlModeSetE.addElement("PlayNumbers").addText(deviceControlModeSet.getPlayNumbers());
             }
+            if(deviceControlModeSet.getCtrlType()!=null && deviceControlModeSet.getCtrlType()!="" && deviceControlModeSet.getCtrlType()!="null"){
+                deviceControlModeSetE.addElement("CtrlType").addText(deviceControlModeSet.getCtrlType());
+            }
+            if(deviceControlModeSet.getPhaseNo()!=null && deviceControlModeSet.getPhaseNo()!="" && deviceControlModeSet.getPhaseNo()!="null"){
+                deviceControlModeSetE.addElement("PhaseNo").addText(deviceControlModeSet.getPhaseNo());
+            }
+            if(deviceControlModeSet.getPlanNo()!=null && deviceControlModeSet.getPlanNo()!="" && deviceControlModeSet.getPlanNo()!="null"){
+                deviceControlModeSetE.addElement("PlanNo").addText(deviceControlModeSet.getPlanNo());
+            }
+            if(deviceControlModeSet.getCycleLen()!=null && deviceControlModeSet.getCycleLen()!="" && deviceControlModeSet.getCycleLen()!="null"){
+                deviceControlModeSetE.addElement("CycleLen").addText(deviceControlModeSet.getCycleLen());
+            }
+            if(deviceControlModeSet.getCroodLampNo()!=null && deviceControlModeSet.getCroodLampNo()!="" && deviceControlModeSet.getCroodLampNo()!="null"){
+                deviceControlModeSetE.addElement("CoordLampNo").addText(deviceControlModeSet.getCroodLampNo());
+            }
+            if(deviceControlModeSet.getOffset()!=null && deviceControlModeSet.getOffset()!="" && deviceControlModeSet.getOffset()!="null"){
+                deviceControlModeSetE.addElement("OffSet").addText(deviceControlModeSet.getOffset());
+            }
             if(deviceControlModeSet.getHoldTime()!=null && deviceControlModeSet.getHoldTime()!="" && deviceControlModeSet.getHoldTime()!="null"){
                 deviceControlModeSetE.addElement("HoldTime").addText(deviceControlModeSet.getHoldTime());
             }

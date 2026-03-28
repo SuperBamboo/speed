@@ -6,6 +6,7 @@ import com.shengxuan.speed.entity.*;
 import com.shengxuan.speed.entity.pojo.*;
 import com.shengxuan.speed.mapper.*;
 import com.shengxuan.speed.util.DateFormat;
+import com.shengxuan.speed.util.ParseJNCHUtils;
 import com.shengxuan.speed.util.callback.CallbackListener;
 import com.shengxuan.speed.util.tostring.*;
 import com.shengxuan.speed.util.toxml.StringToXML;
@@ -47,6 +48,11 @@ public class Client extends Thread implements Serializable {
 
 
     private UserRegionMapper userRegionMapper;
+
+    private CtrlModeTypeMapper ctrlModeTypeMapper;
+    private LampGroupMapper lampGroupMapper;
+    private PhaseMapper phaseMapper;
+    private PlanMapper planMapper;
 
     List<LocationInfo> locationInfoList = new ArrayList<>();
 
@@ -126,7 +132,7 @@ public class Client extends Thread implements Serializable {
         isStopTread = stopTread;
     }
 
-    public Client(int serverId, String host, int port, String username, String password, DeviceMapper deviceMapper, WarningToneMapper warningToneMapper, DisplayMapper displayMapper, AlarmMapper alarmMapper, DeviceCtrlModeMapper deviceCtrlModeMapper, PlanParamValueMapper planParamValueMapper, PlanParamMapper planParamMapper, PlanModeMapper planModeMapper, ParameterMapper parameterMapper, PortMapper portMapper, PushAlarmMapper pushAlarmMapper, RegionMapper regionMapper, DeviceControlModeApplyMapper deviceControlModeApplyMapper, DevicePlanModeApplyMapper devicePlanModeApplyMapper, PlanParamApplyMapper planParamApplyMapper, RegionDeviceTypeMapper regionDeviceTypeMapper, UserRegionMapper userRegionMapper, WebSocketHandler webSocketHandler) {
+    public Client(int serverId, String host, int port, String username, String password, DeviceMapper deviceMapper, WarningToneMapper warningToneMapper, DisplayMapper displayMapper, AlarmMapper alarmMapper, DeviceCtrlModeMapper deviceCtrlModeMapper, PlanParamValueMapper planParamValueMapper, PlanParamMapper planParamMapper, PlanModeMapper planModeMapper, ParameterMapper parameterMapper, PortMapper portMapper, PushAlarmMapper pushAlarmMapper, RegionMapper regionMapper, DeviceControlModeApplyMapper deviceControlModeApplyMapper, DevicePlanModeApplyMapper devicePlanModeApplyMapper, PlanParamApplyMapper planParamApplyMapper, RegionDeviceTypeMapper regionDeviceTypeMapper, UserRegionMapper userRegionMapper,CtrlModeTypeMapper ctrlModeTypeMapper,LampGroupMapper lampGroupMapper,PhaseMapper phaseMapper,PlanMapper planMapper, WebSocketHandler webSocketHandler) {
         this.userRegionMapper = userRegionMapper;
         this.serverId = serverId;
         this.deviceMapper = deviceMapper;
@@ -145,6 +151,10 @@ public class Client extends Thread implements Serializable {
         this.devicePlanModeApplyMapper = devicePlanModeApplyMapper;
         this.planParamApplyMapper = planParamApplyMapper;
         this.regionDeviceTypeMapper = regionDeviceTypeMapper;
+        this.ctrlModeTypeMapper = ctrlModeTypeMapper;
+        this.lampGroupMapper = lampGroupMapper;
+        this.phaseMapper = phaseMapper;
+        this.planMapper = planMapper;
         this.webSocketHandler = (MyWebSocketHandler) webSocketHandler;
 
         try {
@@ -507,6 +517,10 @@ public class Client extends Thread implements Serializable {
                     WarningTone warningTone = new WarningTone();
                     Display display = new Display();
                     Alarm alarm = new Alarm();
+                    CtrlModeType ctrlModeType = new CtrlModeType();
+                    LampGroup lampGroup = new LampGroup();
+                    Phase phase = new Phase();
+                    Plan plan = new Plan();
                     DeviceCtrlMode deviceCtrlMode = new DeviceCtrlMode();
                     PlanMode planMode = new PlanMode();
                     PlanParam planParam = new PlanParam();
@@ -531,6 +545,10 @@ public class Client extends Thread implements Serializable {
                                 warningToneMapper.delByDeviceId(deviceId,serverId);
                                 displayMapper.delByDeviceId(deviceId,serverId);
                                 alarmMapper.delByDeviceId(deviceId,serverId);
+                                ctrlModeTypeMapper.del(deviceId,serverId);
+                                lampGroupMapper.delByDeviceId(deviceId,serverId);
+                                phaseMapper.delByDeviceId(deviceId,serverId);
+                                planMapper.delByDeviceId(deviceId,serverId);
                                 deviceCtrlModeMapper.delByDeviceId(deviceId,serverId);
                                 planParamValueMapper.delByDeviceId(deviceId,serverId);
                                 planParamMapper.delByDeviceId(deviceId,serverId);
@@ -660,6 +678,54 @@ public class Client extends Thread implements Serializable {
                             alarm = new Alarm();
                         }
 
+                        //CtrlModeType列表解析
+                        if (xmlNodeAndAttr.getNodeName().equals("CtrlModeTypeNo")) {
+                            ctrlModeType.setDeviceId(deviceId);
+                            ctrlModeType.setCtrlModeTypeNo(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("CtrlModeTypeName")) {
+                            ctrlModeType.setCtrlModeTypeName(xmlNodeAndAttr.getNodeValue());
+                            ctrlModeType.setServerId(serverId);
+                            ctrlModeTypeMapper.add(ctrlModeType);
+                            ctrlModeType = new CtrlModeType();
+                        }
+
+                        //LampGroup列表解析
+                        if (xmlNodeAndAttr.getNodeName().equals("LampGroupNo")) {
+                            lampGroup.setDeviceId(deviceId);
+                            lampGroup.setLampGroupNo(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("LampGroupName")) {
+                            lampGroup.setLampGroupName(xmlNodeAndAttr.getNodeValue());
+                            lampGroup.setServerId(serverId);
+                            lampGroupMapper.add(lampGroup);
+                            lampGroup = new LampGroup();
+                        }
+
+                        //Phase列表解析
+                        if (xmlNodeAndAttr.getNodeName().equals("PhaseNo") && xmlNodeAndAttr.getAttrName() == null) {
+                            phase.setDeviceId(deviceId);
+                            phase.setPhaseNo(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("PhaseName")) {
+                            phase.setServerId(serverId);
+                            phase.setPhaseName(xmlNodeAndAttr.getNodeValue());
+                            phaseMapper.add(phase);
+                            phase = new Phase();
+                        }
+
+                        //Plan列表解析
+                        if (xmlNodeAndAttr.getNodeName().equals("PlanNo") && xmlNodeAndAttr.getAttrName() == null) {
+                            plan.setDeviceId(deviceId);
+                            plan.setPlanNo(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("PlanName")) {
+                            plan.setServerId(serverId);
+                            plan.setPlanName(xmlNodeAndAttr.getNodeValue());
+                            planMapper.add(plan);
+                            plan = new Plan();
+                        }
+
                         //DeviceCtrlMode列表解析
                         if (xmlNodeAndAttr.getNodeName().equals("DeviceCtrlModeNo")) {
                             deviceCtrlMode.setDeviceId(deviceId);
@@ -701,6 +767,30 @@ public class Client extends Thread implements Serializable {
                         if (xmlNodeAndAttr.getNodeName().equals("PlayNumbers")) {
                             deviceCtrlMode.setPlayNumbers(xmlNodeAndAttr.getNodeValue());
                             deviceCtrlMode.setPlayNumbersValidity(xmlNodeAndAttr.getAttrValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("CtrlType")) {
+                            deviceCtrlMode.setCtrlTypeValidity(xmlNodeAndAttr.getAttrValue());
+                            deviceCtrlMode.setCtrlType(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("PhaseNo") && "validity".equals(xmlNodeAndAttr.getAttrName())) {
+                            deviceCtrlMode.setPhaseNoValidity(xmlNodeAndAttr.getAttrValue());
+                            deviceCtrlMode.setPhaseNo(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("PlanNo") && "validity".equals(xmlNodeAndAttr.getAttrName())) {
+                            deviceCtrlMode.setPlanNoValidity(xmlNodeAndAttr.getAttrValue());
+                            deviceCtrlMode.setPlanNo(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("CycleLen")) {
+                            deviceCtrlMode.setCycleLenValidity(xmlNodeAndAttr.getAttrValue());
+                            deviceCtrlMode.setCycleLen(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("CoordLampNo")) {
+                            deviceCtrlMode.setCoordLampNoValidity(xmlNodeAndAttr.getAttrValue());
+                            deviceCtrlMode.setCoordLampNo(xmlNodeAndAttr.getNodeValue());
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("OffSet")) {
+                            deviceCtrlMode.setOffSetValidity(xmlNodeAndAttr.getAttrValue());
+                            deviceCtrlMode.setOffSet(xmlNodeAndAttr.getNodeValue());
                         }
                         if (xmlNodeAndAttr.getNodeName().equals("HoldTime")) {
                             if(planMode.getDeviceId() == null){
@@ -932,6 +1022,55 @@ public class Client extends Thread implements Serializable {
                                 index = i;
                                 webSocketHandler.broadcastMessageBySessionId(1,myQueueList.get(i).getSessionId(),result);
                                 System.out.println("服务器返回"+deviceID+"设备状态");
+                            }
+                        }
+                        //如果之前有删除
+                        if(index>0){
+                            for (int i = 0; i < index; i++) {
+                                myQueueList.remove(0);
+                            }
+                        }
+                    } catch (Exception e) {
+                        //throw new RuntimeException(e);
+                        e.printStackTrace();
+                    }
+                }
+
+                if (msg.contains("<NBDeviceParamSet")) {
+                    //请求控制返回数据包
+                    ArrayList<XMLNodeAndAttr> xmlList = new StringToXML(msg).getXMLList();
+                    boolean flag = false;
+                    String message = "";
+                    String seq = "";
+                    for (XMLNodeAndAttr xmlNodeAndAttr : xmlList) {
+                        if(xmlNodeAndAttr.getNodeName().equals("Seq")){
+                            seq = xmlNodeAndAttr.getNodeValue();
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("Res")) {
+                            if (xmlNodeAndAttr.getNodeValue().equals("1")) {
+                                //设置成功
+                                flag = true;
+                            }
+                        }
+                        if (xmlNodeAndAttr.getNodeName().equals("ErrorMsg")) {
+
+                            message = xmlNodeAndAttr.getNodeValue();
+                        }
+                    }
+                    //-----------------------------通知前台----------------------
+                    if(Objects.equals(message, "")){
+                        message = "设置机内参数成功!";
+                    }
+                    SetResponse setResponse = new SetResponse(flag,message);
+                    try {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        String result = objectMapper.writeValueAsString(setResponse);
+                        int index = -1;
+                        for (int i = 0; i < myQueueList.size(); i++) {
+                            if(myQueueList.get(i).getSeq().equals(seq)){
+                                index = i;
+                                webSocketHandler.broadcastMessageBySessionId(2,myQueueList.get(i).getSessionId(),result);
+                                //System.out.println("服务器返回设置返回"+flag);
                             }
                         }
                         //如果之前有删除
@@ -1231,6 +1370,51 @@ public class Client extends Thread implements Serializable {
 
                 }
 
+                if(msg.contains("<NBDeviceParam>")){
+                    //这个数据包是查询机内参数返回
+                    NBDeviceParam nbDeviceParam = new NBDeviceParam();
+                    String deviceId = "";
+                    String parameter = "";
+                    String seq = "";
+                    ArrayList<XMLNodeAndAttr> xmlList = new StringToXML(msg).getXMLList();
+                    for (XMLNodeAndAttr xmlNodeAndAttr : xmlList) {
+                        if(xmlNodeAndAttr.getNodeName().equals("Seq")){
+                            seq = xmlNodeAndAttr.getNodeValue();
+                        }
+                        if(xmlNodeAndAttr.getNodeName().equals("DeviceID")){
+                            deviceId = xmlNodeAndAttr.getNodeValue();
+                            nbDeviceParam.setDeviceId(deviceId);
+                        }
+                        if(xmlNodeAndAttr.getNodeName().equals("Parameter")){
+                            parameter = xmlNodeAndAttr.getNodeValue();
+                            nbDeviceParam.setParameter(parameter);
+                        }
+                    }
+                    try {
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        nbDeviceParam.setServerId(serverId);
+                        String result = objectMapper.writeValueAsString(nbDeviceParam);
+                        int index = -1;
+                        for (int i = 0; i < myQueueList.size(); i++) {
+                            if(myQueueList.get(i).getSeq().equals(seq)){
+                                index = i;
+                                //此处异步解析参数
+                                doParseJNCH(myQueueList.get(i).getSessionId(),nbDeviceParam);
+                                //webSocketHandler.broadcastMessageBySessionId(5,myQueueList.get(i).getSessionId(),result);
+                                //System.out.println("服务器返回"+deviceId+"机内参数");
+                            }
+                        }
+                        //如果之前有删除
+                        if(index>0){
+                            for (int i = 0; i < index; i++) {
+                                myQueueList.remove(0);
+                            }
+                        }
+                    } catch (Exception e) {
+                        //throw new RuntimeException(e);
+                        e.printStackTrace();
+                    }
+                }
                 return "结果返回了";
             }
 
@@ -1292,6 +1476,10 @@ public class Client extends Thread implements Serializable {
                         warningToneMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
                         displayMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
                         alarmMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
+                        ctrlModeTypeMapper.del(deviceIsHave.getDeviceId(),serverId);
+                        lampGroupMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
+                        phaseMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
+                        planMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
                         deviceCtrlModeMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
                         planParamValueMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
                         planParamMapper.delByDeviceId(deviceIsHave.getDeviceId(),serverId);
@@ -1396,6 +1584,44 @@ public class Client extends Thread implements Serializable {
 
     }
 
+    private void doParseJNCH(String sessionId,NBDeviceParam nbDeviceParam){
+        new ThreadTask<String>(){
+            @Override
+            public String onDoInBackground() {
+                //1.判断是那种设备的机内参数
+                int serverId1 = nbDeviceParam.getServerId();
+                String deviceId = nbDeviceParam.getDeviceId();
+                Device device = deviceMapper.findByDeviceIdAndServerId(deviceId, serverId1);
+                String deviceType = null;
+                if(device!=null){
+                    deviceType = device.getDeviceType();
+                }
+                if(deviceType!=null){
+                    String result = null;
+                    if(deviceType.equals("0")){
+                        //测速设备机内参数
+                        result = ParseJNCHUtils.parseJNCH(0, nbDeviceParam.getParameter());
+                    } else if (deviceType.equals("1")) {
+                        //显示屏设备即被参数
+                        result = ParseJNCHUtils.parseJNCH(1, nbDeviceParam.getParameter());
+                    } else if (deviceType.equals("2")) {
+                        //警闪灯设备机内参数
+                        result = ParseJNCHUtils.parseJNCH(2, nbDeviceParam.getParameter());
+                    } else if (deviceType.equals("3")) {
+                        //移动灯设备机内参数
+                        result = ParseJNCHUtils.parseJNCH(3, nbDeviceParam.getParameter());
+                    } else if (deviceType.equals("4")) {
+                        //信号灯设备机内参数
+                        result = ParseJNCHUtils.parseJNCH(4, nbDeviceParam.getParameter());
+                    }
+                    if(result!=null){
+                        webSocketHandler.broadcastMessageBySessionId(5,sessionId,result);
+                    }
+                }
+                return "解析机内参数成功";
+            }
+        }.execute();
+    }
 
     /**
      * 发送登录指令
@@ -1634,11 +1860,12 @@ public class Client extends Thread implements Serializable {
                     String line;
                     while ((line = bufferedReader.readLine()) != null) {
                         bufferedWriter.write(line + "\n");
-                        //System.out.println("111" + line);
+                        System.out.println("111" + line);
                         bufferedWriter.flush();
                     }
+
                     //加入等待返回队列
-                    //("客户端发送了"+deviceControlModeSet.getDeviceId()+"手动管控");
+                    System.out.println(serverId+" 客户端发送了"+deviceControlModeSet.getDeviceId()+"手动管控");
                     myQueueList.add(new MyQueue(sessionId,seq));
                 } catch (IOException e) {
                     System.out.println("----------异常定位开始----------");
@@ -2155,6 +2382,114 @@ public class Client extends Thread implements Serializable {
             @Override
             public void onResult(String s) {
                 super.onResult(s);
+            }
+        }.execute();
+    }
+
+    /**
+     * 发送查询某设备的机内参数信息
+     */
+    public void sendQueryParam(final String deviceID,String sessionId) {
+        new ThreadTask<String>() {
+
+            @Override
+            public void onStart() {
+                super.onStart();
+                //Log.d("ThreadTask ", "onStart线程：" + Thread.currentThread().getName());
+            }
+
+            @Override
+            public String onDoInBackground() {
+                //Log.d("ThreadTask ", "onDoInBackground线程： " + Thread.currentThread().getName());
+
+                //写操作
+                try {
+                    //通过socket获取字符流           
+                    BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "gb2312"));
+
+                    String seq = DateFormat.getSeq();
+
+                    //获取要传送的xml文件字符串形式
+                    QueryParamXMLToString xmlFile = new QueryParamXMLToString(seq, fromInstance, toInstance, deviceID);
+                    String xml = xmlFile.queryParam();
+
+                    //字符串转换为字符输入流
+                    InputStream inputStream = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+
+                    //通过标准输入流获取字符流           
+                    String line;
+                    while ((line = bufferedReader.readLine()) != null) {
+                        bufferedWriter.write(line + "\n");
+                        System.out.println("111" + line);
+                        bufferedWriter.flush();
+                    }
+                    //加入等待返回队列
+                    //System.out.println("客户端发送了"+devicePlanModeSet.getDeviceId()+"程式控制");
+                    myQueueList.add(new MyQueue(sessionId, seq));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return "结果返回了";
+            }
+
+            @Override
+            public void onResult(String s) {
+                super.onResult(s);
+                //Log.d("ThreadTask ", "onResult线程： " + Thread.currentThread().getName() + " 结果：" + s);
+            }
+        }.execute();
+    }
+
+    /**
+     * 发送设置某设备的机内参数信息
+     */
+    public void sendSetParam(final String deviceID,final String parameter,String sessionId) {
+        new ThreadTask<String>() {
+
+            @Override
+            public void onStart() {
+                super.onStart();
+                //Log.d("ThreadTask ", "onStart线程：" + Thread.currentThread().getName());
+            }
+
+            @Override
+            public String onDoInBackground() {
+                //Log.d("ThreadTask ", "onDoInBackground线程： " + Thread.currentThread().getName());
+
+                //写操作
+                try {
+                    //通过socket获取字符流           
+                    BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "gb2312"));
+
+                    String seq = DateFormat.getSeq();
+                    //获取要传送的xml文件字符串形式
+                    SetParamXMLToString xmlFile = new SetParamXMLToString(seq, fromInstance, toInstance, deviceID,parameter);
+                    String xml = xmlFile.queryParam();
+
+                    //字符串转换为字符输入流
+                    InputStream inputStream = new ByteArrayInputStream(xml.getBytes("UTF-8"));
+                    BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, "UTF-8"));
+
+                    //通过标准输入流获取字符流           
+                    String line;
+                    while ((line = bufferedReader.readLine()) != null) {
+                        bufferedWriter.write(line + "\n");
+                        System.out.println("111" + line);
+                        bufferedWriter.flush();
+                    }
+                    //加入等待返回队列
+                    myQueueList.add(new MyQueue(sessionId, seq));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return "结果返回了";
+            }
+
+            @Override
+            public void onResult(String s) {
+                super.onResult(s);
+                //Log.d("ThreadTask ", "onResult线程： " + Thread.currentThread().getName() + " 结果：" + s);
             }
         }.execute();
     }

@@ -20,6 +20,15 @@ app.service('socketService',function ($http) {
         console.log("socketService  发送刷新服务器："+serverId+" 下设备: "+deviceId+"指令");
         return $http.get('../socket/sendDeviceByDeviceIdAndServerId?deviceId='+deviceId+"&serverId="+serverId);
     }
+    this.findNBDeviceParamByDeviceId = function (sessionId,deviceId,serverId){
+        return $http.get('../socket/findNBDeviceParamByDeviceId?sessionId='+sessionId+'&deviceId='+deviceId+"&serverId="+serverId);
+    }
+    this.setNBDeviceParamByDeviceId = function (sessionId,deviceId,serverId,speedSys) {
+        return $http.post('../socket/setNBDeviceParamByDeviceId?sessionId='+sessionId+'&deviceId='+deviceId+"&serverId="+serverId,speedSys);
+    }
+    this.setJSDNBDeviceParamByDeviceId = function (sessionId,deviceId,serverId,jsdSys) {
+        return $http.post('../socket/setJSDNBDeviceParamByDeviceId?sessionId='+sessionId+'&deviceId='+deviceId+"&serverId="+serverId,jsdSys);
+    }
     //启动socket链接
     this.openSocket = function (server) {
         console.log("socketService  发送启动服务器");

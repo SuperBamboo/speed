@@ -6,6 +6,7 @@ app.controller('indexController',function ($scope,deviceService,$timeout,session
                 case 3:
                     //更新报警表格
                     $scope.findNewAlarm10Size();
+                    speak(e.data.data);
                     break;
                 case 4:
                     //更新申请列表
@@ -20,6 +21,17 @@ app.controller('indexController',function ($scope,deviceService,$timeout,session
             }
         })
     }
+
+    function speak(text) {
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel(); // 停止当前播报
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+    // 使用
+    //speak('收到报警，请及时处理');
 
     window.onload = function () {
         window.addEventListener('message', messageListener);
@@ -107,7 +119,7 @@ app.controller('indexController',function ($scope,deviceService,$timeout,session
             .then((AMap) => {
                 //JS API 加载完成后获取AMap对象
                 $scope.AMap = AMap;
-                $scope.map = new AMap.Map("map-container", {
+                $scope.map = new AMap.Map("container", {
                     mapStyle: "amap://styles/grey",
                     viewMode: '2D', //默认使用 2D 模式
                     zoom: 10, //地图级别
@@ -382,8 +394,8 @@ app.controller('indexController',function ($scope,deviceService,$timeout,session
                     margin: 2px 0 6px 0;
                     font-size: 13px;
                     font-weight: 400;
-                    /*color: #e5d9e2;*/
-                    color: #0a0e14;
+                    color: #e5d9e2;
+                    /*color: #0a0e14;*/
                     line-height: 1.2;
                 ">
                     ${device.server.serverName}
@@ -393,8 +405,8 @@ app.controller('indexController',function ($scope,deviceService,$timeout,session
                     margin: 0;
                     font-size: 12px;
                     font-weight: 400;
-                    /*color: #d5d9e2;*/
-                    color: #0a0e14;
+                    color: #d5d9e2;
+                    /*color: #0a0e14;*/
                 ">
                     ${device.deviceName}
                 </p>

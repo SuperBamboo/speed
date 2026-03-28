@@ -47,6 +47,11 @@ public class DeviceController {
         return deviceService.findPage(searchDevice,pageNo,pageSize);
     }
 
+    @RequestMapping("/findByConditionLike")
+    public List<Device> findByConditionLike(@RequestBody Device searchDevice, String deviceNameLike){
+        return deviceService.findByConditionLike(searchDevice,deviceNameLike);
+    }
+
     @RequestMapping("/findById")
     public Device findById(String deviceId,int serverId){
         System.out.println("前端发送了查询 "+deviceId+" 设备信息");

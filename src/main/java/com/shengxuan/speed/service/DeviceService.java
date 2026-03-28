@@ -36,4 +36,5 @@ public interface DeviceService {
      */
     List<ServerAndRegionAndSubRegionAndDevice> findAllServerAndRegionAndSubRegionAndDevice();
 
+    List<Device> findByConditionLike(Device searchDevice, String deviceNameLike);
 }

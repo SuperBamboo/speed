@@ -67,17 +67,41 @@ public class PushAlarmServiceImpl implements PushAlarmService {
         }
         //List<String> deviceIds = deviceMapper.findByRegionDeviceType(regionDeviceTypeList);
         List<ServerDevice> serverDeviceIds = deviceMapper.findByServerRegionDeviceType(regionDeviceTypeList);
-        PageHelper.startPage(pageNo,pageSize);
+        if(pageNo == -1 && pageSize == -1){
+            //不需要分页
+        }else {
+            PageHelper.startPage(pageNo,pageSize);
+        }
         List<PushAlarm> list = pushAlarmMapper.findByConditionAndPage1(pushAlarm,serverDeviceIds);
-        //按照时间倒叙排列
-        list.sort((a,b) ->{
-            int dateComparison = b.getOccurDate().compareTo(a.getOccurDate());
-            if(dateComparison!=0){
-                return dateComparison;
-            }else {
-                return b.getOccurTime().compareTo(a.getOccurTime());
-            }
-        });
+        if(pageNo == -1 && pageSize == -1){
+            //先按照设备编号deviceId正序排序，然后按照时间倒序排序
+            list.sort((a,b) -> {
+                // 按照设备编号deviceId正序排序
+                int deviceComparison = a.getDeviceId().compareTo(b.getDeviceId());
+                if(deviceComparison != 0){
+                    return deviceComparison;
+                }else {
+                    // 设备编号相同时，按照时间倒序排序
+                    int dateComparison = b.getOccurDate().compareTo(a.getOccurDate());
+                    if(dateComparison != 0){
+                        return dateComparison;
+                    }else {
+                        return b.getOccurTime().compareTo(a.getOccurTime());
+                    }
+                }
+            });
+        }else {
+            //按照时间倒叙排列
+            list.sort((a,b) ->{
+                int dateComparison = b.getOccurDate().compareTo(a.getOccurDate());
+                if(dateComparison!=0){
+                    return dateComparison;
+                }else {
+                    return b.getOccurTime().compareTo(a.getOccurTime());
+                }
+            });
+        }
+
         PageInfo<PushAlarm> pageInfo =  new PageInfo<>(list);
         long total = pageInfo.getTotal();
         return new PageResult(total,pageSize,pageNo,list);
@@ -119,6 +143,19 @@ public class PushAlarmServiceImpl implements PushAlarmService {
         }
         return null;
         //return pushAlarmMapper.findNewAlarm10Size();
+    }
+
+    @Override
+    public List<PushAlarm> findAllByDeviceIdAndDate(String deviceId, int serverId, String date1, String date2) {
+        if(date1!=null && !date1.equals("") && !date1.equals("null")){
+            //传过来的时yyyy-MM-dd 需要转换成yyyyMMdd
+            date1 = date1.replace("-","");
+        }
+        if(date2!=null && !date2.equals("") && !date2.equals("null")){
+            //传过来的时yyyy-MM-dd 需要转换成yyyyMMdd
+            date2 = date2.replace("-","");
+        }
+        return pushAlarmMapper.findByDeviceIdAndDate(deviceId,serverId,date1,date2);
     }
 
 

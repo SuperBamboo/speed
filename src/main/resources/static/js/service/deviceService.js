@@ -8,6 +8,9 @@ app.service('deviceService',function ($http) {
     this.search = function (pageNo,pageSize,searchDevice) {
         return $http.post("../device/search?pageNo="+pageNo+"&pageSize="+pageSize,searchDevice);
     };
+    this.findByConditionLike = function (searchDevice,deviceNameLike){
+        return $http.post("../device/findByConditionLike?deviceNameLike="+deviceNameLike,searchDevice);
+    }
     this.findById = function (deviceId,serverId){
         return $http.get('../device/findById?deviceId='+deviceId+'&serverId='+serverId);
     };

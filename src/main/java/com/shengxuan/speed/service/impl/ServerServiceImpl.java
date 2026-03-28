@@ -8,6 +8,7 @@ import com.shengxuan.speed.mapper.*;
 import com.shengxuan.speed.service.ServerService;
 import com.shengxuan.speed.util.CheckUtils;
 import com.shengxuan.speed.util.DateFormat;
+import com.shengxuan.speed.util.LoggerUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -178,6 +179,9 @@ public class ServerServiceImpl implements ServerService {
         serverMapper.add(server);
         rs.setType(0);
         rs.setMessage("添加服务器成功!");
+
+        Logger loggerByDesc = LoggerUtils.getLoggerByDesc(" 添加服务器 " + server.getServerName());
+        loggerMapper.add(loggerByDesc);
         return rs;
     }
 

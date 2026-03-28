@@ -3,6 +3,7 @@ package com.shengxuan.speed.mapper;
 import com.shengxuan.speed.entity.PushAlarm;
 import com.shengxuan.speed.entity.pojo.ServerDevice;
 import org.apache.ibatis.annotations.*;
+import org.springframework.security.core.parameters.P;
 
 import java.util.List;
 
@@ -169,4 +170,24 @@ public interface PushAlarmMapper {
 
     @Delete("delete from pushalarm where server_id = #{serverId}")
     void delByServerId(int serverId);
+
+    @Select("select * from pushalarm where device_id = #{deviceId} and server_id = #{serverId} and occur_date >= #{date1} and occur_date <= #{date2}")
+    @Results({
+            @Result(property ="id",column = "id"),
+            @Result(property ="alarmNo",column = "alarm_no"),
+            @Result(property ="deviceId",column = "device_id"),
+            @Result(property ="serverId",column = "server_id"),
+            @Result(property ="deviceName",column = "device_name"),
+            @Result(property ="ofRegionName",column = "of_region_name"),
+            @Result(property ="ofSubregionName",column = "of_subregion_name"),
+            @Result(property ="deviceModel",column = "device_model"),
+            @Result(property ="longitude",column = "longitude"),
+            @Result(property ="dimension",column = "dimension"),
+            @Result(property ="occurDate",column = "occur_date"),
+            @Result(property ="occurTime",column = "occur_time"),
+            @Result(property ="alarmType",column = "alarm_type"),
+            @Result(property ="alarmDesc",column = "alarm_desc"),
+            @Result(property ="isCheck",column = "is_check")
+    })
+    List<PushAlarm> findByDeviceIdAndDate(@Param("deviceId") String deviceId, @Param("serverId") int serverId, @Param("date1") String date1, @Param("date2") String date2);
 }

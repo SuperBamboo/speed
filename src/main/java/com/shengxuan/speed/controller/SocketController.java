@@ -2,14 +2,20 @@ package com.shengxuan.speed.controller;
 
 import com.shengxuan.speed.SpeedApplication;
 import com.shengxuan.speed.entity.Device;
+import com.shengxuan.speed.entity.LampGroup;
 import com.shengxuan.speed.entity.Logger;
 import com.shengxuan.speed.entity.Server;
 import com.shengxuan.speed.entity.pojo.DeviceControlModeSet;
 import com.shengxuan.speed.entity.pojo.DevicePlanModeSet;
+import com.shengxuan.speed.entity.pojo.NBDeviceParam;
 import com.shengxuan.speed.entity.pojo.ResultQuery;
+import com.shengxuan.speed.entity.pojo.jnch.JSDSys;
+import com.shengxuan.speed.entity.pojo.jnch.SpeedSys;
 import com.shengxuan.speed.mapper.*;
 import com.shengxuan.speed.socket.Client;
 import com.shengxuan.speed.util.DateFormat;
+import com.shengxuan.speed.util.LoggerUtils;
+import com.shengxuan.speed.util.ParseJNCHUtils;
 import com.shengxuan.speed.util.callback.CallbackListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationRunner;
@@ -70,8 +76,12 @@ public class SocketController {
 
     private final WebSocketHandler webSocketHandler;
 
+    private final CtrlModeTypeMapper ctrlModeTypeMapper;
+    private final LampGroupMapper  lampGroupMapper;
+    private final PhaseMapper phaseMapper;
+    private final PlanMapper planMapper;
 
-    public SocketController(LoggerMapper loggerMapper, DeviceMapper deviceMapper, DeviceCtrlModeMapper deviceCtrlModeMapper, PlanModeMapper planModeMapper, ServerMapper serverMapper, WarningToneMapper warningToneMapper, DisplayMapper displayMapper, AlarmMapper alarmMapper, PlanParamValueMapper planParamValueMapper, PlanParamMapper planParamMapper, ParameterMapper parameterMapper, PushAlarmMapper pushAlarmMapper, PortMapper portMapper, RegionMapper regionMapper, DeviceControlModeApplyMapper deviceControlModeApplyMapper, DevicePlanModeApplyMapper devicePlanModeApplyMapper, PlanParamApplyMapper planParamApplyMapper, RegionDeviceTypeMapper regionDeviceTypeMapper, UserRegionMapper userRegionMapper, WebSocketHandler webSocketHandler) {
+    public SocketController(LoggerMapper loggerMapper, DeviceMapper deviceMapper, DeviceCtrlModeMapper deviceCtrlModeMapper, PlanModeMapper planModeMapper, ServerMapper serverMapper, WarningToneMapper warningToneMapper, DisplayMapper displayMapper, AlarmMapper alarmMapper, PlanParamValueMapper planParamValueMapper, PlanParamMapper planParamMapper, ParameterMapper parameterMapper, PushAlarmMapper pushAlarmMapper, PortMapper portMapper, RegionMapper regionMapper, DeviceControlModeApplyMapper deviceControlModeApplyMapper, DevicePlanModeApplyMapper devicePlanModeApplyMapper, PlanParamApplyMapper planParamApplyMapper, RegionDeviceTypeMapper regionDeviceTypeMapper, UserRegionMapper userRegionMapper, WebSocketHandler webSocketHandler, CtrlModeTypeMapper ctrlModeTypeMapper, LampGroupMapper lampGroupMapper, PhaseMapper phaseMapper, PlanMapper planMapper) {
         this.loggerMapper = loggerMapper;
         this.deviceMapper = deviceMapper;
         this.deviceCtrlModeMapper = deviceCtrlModeMapper;
@@ -92,9 +102,20 @@ public class SocketController {
         this.regionDeviceTypeMapper = regionDeviceTypeMapper;
         this.userRegionMapper = userRegionMapper;
         this.webSocketHandler = webSocketHandler;
+        this.ctrlModeTypeMapper = ctrlModeTypeMapper;
+        this.lampGroupMapper = lampGroupMapper;
+        this.phaseMapper = phaseMapper;
+        this.planMapper = planMapper;
     }
 
 
+    /**
+     * 发送查询设备状态
+     * @param sessionId
+     * @param deviceId
+     * @param serverId
+     * @return
+     */
     @RequestMapping("/sendDeviceStau")
     @ResponseBody
     public ResultQuery sendDeviceStau(String sessionId, String deviceId,int serverId) {
@@ -116,6 +137,154 @@ public class SocketController {
         return resultQuery;
     }
 
+    /**
+     * 发送查询 机内参数信息
+     * @param sessionId
+     * @param deviceId
+     * @param serverId
+     * @return
+     */
+    @RequestMapping("/findNBDeviceParamByDeviceId")
+    @ResponseBody
+    public ResultQuery findNBDeviceParamByDeviceId(String sessionId, String deviceId,int serverId) {
+        ResultQuery resultQuery = new ResultQuery();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<Client> clientList = SpeedApplication.MyApplicationRunner.clientList;
+                for (Client client : clientList) {
+                    if(client.getServerId() == serverId){
+                        client.sendQueryParam(deviceId,sessionId);
+                    }
+                }
+            }
+        }).start();
+
+        resultQuery.setType(1);
+        resultQuery.setMessage("已向socket连接发送了查询 "+deviceId+"机内参数指令");
+        return resultQuery;
+    }
+
+    /**
+     * 设置 测速设备 机被参数信息
+     * @param speedSys
+     * @param sessionId
+     * @param deviceId
+     * @param serverId
+     * @return
+     */
+    @RequestMapping("/setNBDeviceParamByDeviceId")
+    @ResponseBody
+    public ResultQuery setNBDeviceParamByDeviceId(@RequestBody SpeedSys speedSys, String sessionId, String deviceId, int serverId) {
+        ResultQuery resultQuery = new ResultQuery();
+        if(speedSys!=null && sessionId!=null){
+            ResultQuery resultData = null;
+            //校验参数合法性
+            try {
+                resultData = ParseJNCHUtils.checkParam0(speedSys);
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            if(resultData == null || resultData.getType() == -1){
+                resultQuery.setType(-1);
+                if(resultData == null){
+                    resultQuery.setMessage("参数校验失败,请检查参数输入合法性！");
+                }else {
+                    resultQuery.setMessage(resultData.getMessage());
+                }
+                return resultQuery;
+            }else {
+                String parameter = resultData.getMessage();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<Client> clientList = SpeedApplication.MyApplicationRunner.clientList;
+                        for (Client client : clientList) {
+                            if(client.getServerId() == serverId){
+                                client.sendSetParam(deviceId,parameter,sessionId);
+                            }
+                        }
+                    }
+                }).start();
+                resultQuery.setType(1);
+                resultQuery.setMessage("已向socket连接发送了设置 "+deviceId+"机内参数指令");
+                Server server = serverMapper.findById(serverId);
+                Device device = deviceMapper.findByDeviceId(deviceId, serverId);
+                Logger loggerByDesc = LoggerUtils.getLoggerByDesc(" 发送了修改 " + server.getServerName() + " 下 测速 " + device.getDeviceName() + " 机内参数指令");
+                loggerMapper.add(loggerByDesc);
+                return resultQuery;
+            }
+
+        }else {
+            resultQuery.setType(-1);
+            resultQuery.setMessage("缺少参数，无法下载机内参数！");
+            return resultQuery;
+        }
+    }
+
+    /**
+     * 设置 警闪灯设备 机内参数信息
+     * @param jsdSys
+     * @param sessionId
+     * @param deviceId
+     * @param serverId
+     * @return
+     */
+    @RequestMapping("/setJSDNBDeviceParamByDeviceId")
+    @ResponseBody
+    public ResultQuery setJSDNBDeviceParamByDeviceId(@RequestBody JSDSys jsdSys, String sessionId, String deviceId, int serverId) {
+        ResultQuery resultQuery = new ResultQuery();
+        if(jsdSys!=null && sessionId!=null){
+            //校验参数合法性
+            ResultQuery resultData = null;
+            try{
+                resultData = ParseJNCHUtils.checkParam2(jsdSys);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            if(resultData == null || resultData.getType() == -1){
+                resultQuery.setType(-1);
+                if (resultData == null){
+                    resultQuery.setMessage("参数校验出错请检查数据合法性!");
+                }else  {
+                    resultQuery.setMessage(resultData.getMessage());
+                }
+                return resultQuery;
+            }else {
+                String parameter = resultData.getMessage();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<Client> clientList = SpeedApplication.MyApplicationRunner.clientList;
+                        for (Client client : clientList) {
+                            if(client.getServerId() == serverId){
+                                client.sendSetParam(deviceId,parameter,sessionId);
+                            }
+                        }
+                    }
+                }).start();
+                resultQuery.setType(1);
+                resultQuery.setMessage("已向socket连接发送了设置 "+deviceId+"机内参数指令");
+                Server server = serverMapper.findById(serverId);
+                Device device = deviceMapper.findByDeviceId(deviceId, serverId);
+                Logger loggerByDesc = LoggerUtils.getLoggerByDesc(" 发送了修改 " + server.getServerName() + " 下 警闪灯 " + device.getDeviceName() + " 机内参数指令");
+                loggerMapper.add(loggerByDesc);
+                return resultQuery;
+            }
+
+        }else {
+            resultQuery.setType(-1);
+            resultQuery.setMessage("缺少参数，无法下载机内参数！");
+            return resultQuery;
+        }
+    }
+
+    /**
+     * 刷新设备列表
+     * @return
+     */
     @RequestMapping("/sendDeviceRefresh")
     @ResponseBody
     public ResultQuery sendDeviceRefresh() {
@@ -153,6 +322,12 @@ public class SocketController {
         return resultQuery;
     }
 
+    /**
+     * 发送手动管控
+     * @param deviceCtrlModeSet
+     * @param sessionId
+     * @return
+     */
     @RequestMapping("/sendSDGK")
     @ResponseBody
     public ResultQuery sendDeviceCtrlModeSet(@RequestBody DeviceControlModeSet deviceCtrlModeSet,String sessionId){
@@ -208,6 +383,12 @@ public class SocketController {
         return resultQuery;
     }
 
+    /**
+     * 发送程式管控
+     * @param devicePlanModeSet
+     * @param sessionId
+     * @return
+     */
     @RequestMapping("/sendCSGK")
     @ResponseBody
     public ResultQuery sendDevicePlanModeSet(@RequestBody DevicePlanModeSet devicePlanModeSet, String sessionId){
@@ -259,6 +440,11 @@ public class SocketController {
         return resultQuery;
     }
 
+    /**
+     * 根据 服务器ID 设备ID 发送刷新单个设备
+     * @param deviceId
+     * @param serverId
+     */
     @RequestMapping("/sendDeviceByDeviceIdAndServerId")
     @ResponseBody
     public void sendDeviceByDeviceIdAndServerId(String deviceId,int serverId){
@@ -273,8 +459,17 @@ public class SocketController {
                 }
             }
         }).start();
+        Server server = serverMapper.findById(serverId);
+        Device device = deviceMapper.findByDeviceIdAndServerId(deviceId, serverId);
+        Logger loggerByDesc = LoggerUtils.getLoggerByDesc("发送了 刷新 " + server.getServerName() + " 下 " + device.getDeviceName());
+        loggerMapper.add(loggerByDesc);
     }
 
+    /**
+     * 打开服务器
+     * @param server
+     * @return
+     */
     @RequestMapping("/openSocket")
     @ResponseBody
     public ResultQuery openSocket(@RequestBody Server server){
@@ -301,7 +496,7 @@ public class SocketController {
         }
         Client client = new Client(serverId,ip,port,username,password,deviceMapper,warningToneMapper,displayMapper,alarmMapper,deviceCtrlModeMapper,
                 planParamValueMapper,planParamMapper,planModeMapper,parameterMapper,portMapper,pushAlarmMapper,regionMapper,deviceControlModeApplyMapper,
-                devicePlanModeApplyMapper,planParamApplyMapper,regionDeviceTypeMapper,userRegionMapper,webSocketHandler);
+                devicePlanModeApplyMapper,planParamApplyMapper,regionDeviceTypeMapper,userRegionMapper,ctrlModeTypeMapper,lampGroupMapper,phaseMapper,planMapper,webSocketHandler);
         client.start();
         SpeedApplication.MyApplicationRunner.clientList.add(client);
         resultQuery.setType(0);
@@ -335,6 +530,11 @@ public class SocketController {
         return resultQuery;
     }
 
+    /**
+     * 关闭服务器
+     * @param server
+     * @return
+     */
     @RequestMapping("/closeSocket")
     @ResponseBody
     public ResultQuery closeSocket(@RequestBody Server server){

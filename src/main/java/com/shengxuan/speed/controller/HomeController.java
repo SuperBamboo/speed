@@ -19,6 +19,15 @@ public class HomeController {
         return "admin/server";
     }
 
+    @GetMapping("/admin/jsd_param")
+    public String jsd_param(){
+        return "admin/jsd_param";
+    }
+
+    @GetMapping("/admin/speed_param")
+    public String speed_param(){
+        return "admin/speed_param";
+    }
 
     @GetMapping("/admin/device_manage.html")
     public String user_role(){

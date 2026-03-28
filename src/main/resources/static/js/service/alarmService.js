@@ -11,6 +11,9 @@ app.service('alarmService',function ($http) {
     this.findAllByDeviceId = function (deviceId,serverId){
       return $http.get('../pushAlarm/findAllByDeviceId?deviceId='+deviceId+'&serverId='+serverId);
     };
+    this.findAllByDeviceIdAndDate = function (deviceId,serverId,date1,date2){
+        return $http.get('../pushAlarm/findAllByDeviceIdAndDate?deviceId='+deviceId+'&serverId='+serverId+'&date1='+date1+'&date2='+date2);
+    };
     this.updateCheck = function (id){
         return $http.get('../pushAlarm/updateCheck?id='+id);
     };

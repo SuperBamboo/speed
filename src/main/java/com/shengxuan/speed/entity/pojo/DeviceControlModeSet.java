@@ -16,7 +16,63 @@ public class DeviceControlModeSet implements Serializable {
     private String volume;
     private String playInteval;
     private String playNumbers;
+
+    private String ctrlType;
+    private String phaseNo;
+    private String planNo;
+    private String cycleLen;
+    private String croodLampNo;
+    private String offset;
+
     private String holdTime;
+
+    public String getCtrlType() {
+        return ctrlType;
+    }
+
+    public void setCtrlType(String ctrlType) {
+        this.ctrlType = ctrlType;
+    }
+
+    public String getPhaseNo() {
+        return phaseNo;
+    }
+
+    public void setPhaseNo(String phaseNo) {
+        this.phaseNo = phaseNo;
+    }
+
+    public String getPlanNo() {
+        return planNo;
+    }
+
+    public void setPlanNo(String planNo) {
+        this.planNo = planNo;
+    }
+
+    public String getCycleLen() {
+        return cycleLen;
+    }
+
+    public void setCycleLen(String cycleLen) {
+        this.cycleLen = cycleLen;
+    }
+
+    public String getCroodLampNo() {
+        return croodLampNo;
+    }
+
+    public void setCroodLampNo(String croodLampNo) {
+        this.croodLampNo = croodLampNo;
+    }
+
+    public String getOffset() {
+        return offset;
+    }
+
+    public void setOffset(String offset) {
+        this.offset = offset;
+    }
 
     public int getServerId() {
         return serverId;
