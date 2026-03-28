@@ -1,0 +1,2995 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>警闪灯参数设置</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!--angularjs-->
+  <script type="text/javascript" src="../../static/plugins/admin/angularjs/angular.min.js"></script>
+
+  <script src="../../static/js/base.js"></script>
+  <script src="../../static/js/service/socketService.js"></script>
+  <script src="../../static/js/service/warningToneService.js"></script>
+  <script src="../../static/js/controller/jsd_paramController.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    select{
+      text-align: center;
+    }
+
+    .app-container {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+      background-color: #fff;
+    }
+
+    /* 左侧按钮区域 */
+    .left-panel {
+      width: 320px;
+      background-color: #ffffff;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid #ddd;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .title-bar {
+      padding: 20px;
+      background-color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .title-icon {
+      width: 40px;
+      height: 40px;
+      background-color: #3498db;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+    }
+
+    .title-icon i {
+      font-size: 22px;
+    }
+
+    .title-text {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #1a252f;
+    }
+
+    .menu-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 15px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      background-color: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+      color: black;
+    }
+
+    .menu-item:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      transform: translateX(5px);
+    }
+
+    .menu-item.active {
+      background-color: rgba(52, 152, 219, 0.2);
+      border-left: 4px solid #3498db;
+    }
+
+    .menu-icon {
+      font-size: 18px;
+      width: 30px;
+      text-align: center;
+      margin-right: 12px;
+    }
+
+    .menu-text {
+      font-size: 16px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .action-buttons {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: rgba(26, 37, 47, 0.7);
+    }
+
+    .action-btn {
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .read-btn {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .read-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .send-btn {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .send-btn:hover {
+      background-color: #219653;
+    }
+
+    /* 右侧参数设置区域 */
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .param-header {
+      padding: 20px 30px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #eaeaea;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .param-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .param-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px;
+    }
+
+    .param-section {
+      background-color: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 25px;
+      border: 1px solid #eee;
+      display: none;
+    }
+
+    .param-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .status-message {
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .status-success {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+
+    .status-error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+
+  </style>
+  <style>
+    :root {
+      --my-light-color: #2c3e50;
+      --my-hint-light-color: #95a5a6;
+      --border-color: #d1d8e0;
+      --focus-color: #3498db;
+      --button-bg: #f8f9fa;
+      --button-hover: #3498db;
+      --checkbox-color: #3498db;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: var(--my-light-color);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+      padding: 40px;
+    }
+
+    .two-column-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+    }
+
+    .column {
+      flex: 1;
+      min-width: 400px;
+    }
+
+    .form-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 22px;
+      min-height: 48px;
+    }
+    .form-group1 {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      min-height: 38px;
+    }
+    .form-group2 {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .form-label {
+      flex: 0 0 160px;
+      font-weight: 600;
+      font-size: 15px;
+      text-align: right;
+      padding-right: 20px;
+      color: var(--my-light-color);
+    }
+
+    .form-control {
+      flex: 1;
+      height: 42px;
+      padding: 10px 15px;
+      font-size: 15px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      color: var(--my-light-color);
+      max-width: 320px;
+      background-color: white;
+    }
+
+    .form-control:hover {
+      border-color: #b8c2cc;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--focus-color);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+    }
+
+    .form-control::placeholder {
+      color: var(--my-hint-light-color);
+      font-size: 14px;
+    }
+
+    .inline-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      max-width: 320px;
+    }
+
+    .inline-group .form-control {
+      flex: 1;
+    }
+
+    .inline-label {
+      font-size: 15px;
+      color: var(--my-light-color);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    select.form-control {
+      cursor: pointer;
+      background-color: white;
+      /* 移除多余的背景箭头，只保留浏览器默认或自定义一个 */
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 16px;
+      padding-right: 45px;
+    }
+
+    /* 针对不同浏览器的兼容性 */
+    select.form-control::-ms-expand {
+      display: none;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      margin: 12px 0;
+      padding: 5px 0;
+      justify-content: center; /* 添加这一行 */
+    }
+
+    .checkbox-container input {
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      accent-color: var(--checkbox-color);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .checkbox-container label {
+      font-size: 15px;
+      color: var(--my-light-color);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 50px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    .btn {
+      padding: 13px 45px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 2px solid #e9ecef;
+      border-radius: 6px;
+      background-color: white;
+      color: var(--my-light-color);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 160px;
+    }
+
+    .btn:hover {
+      background-color: var(--button-hover);
+      border-color: var(--button-hover);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+    }
+
+    #btn_determine:hover {
+      background-color: #2980b9;
+      border-color: #2980b9;
+    }
+
+    #btn_cancel:hover {
+      background-color: #7f8c8d;
+      border-color: #7f8c8d;
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 1000px) {
+      .two-column-layout {
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .column {
+        min-width: 100%;
+      }
+
+      body {
+        padding: 20px;
+      }
+
+      .container {
+        padding: 30px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 25px;
+      }
+      .form-group1 {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 5px;
+      }
+
+      .form-label {
+        flex: none;
+        text-align: left;
+        width: 100%;
+        margin-bottom: 8px;
+        padding-right: 0;
+        font-size: 14px;
+      }
+
+      .form-control {
+        width: 100%;
+        max-width: none;
+        font-size: 14px;
+      }
+
+      .inline-group {
+        width: 100%;
+      }
+
+      .button-group {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+
+    .spinner-container {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    /* 隐藏的元素 */
+    .hidden {
+      display: none;
+    }
+
+    /* 输入框成功状态 */
+    .form-control.valid {
+      border-color: #2ecc71;
+    }
+
+    /* 输入框错误状态 */
+    .form-control.error {
+      border-color: #e74c3c;
+    }
+
+    /* 时间范围输入样式 */
+    .time-range-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2px;
+      min-height: 48px;
+    }
+
+    .time-input {
+      width: 60px;
+      height: 42px;
+      padding: 10px;
+      font-size: 15px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      text-align: center;
+      color: var(--my-light-color);
+      background-color: white;
+      transition: all 0.3s ease;
+    }
+
+    .time-input:hover {
+      border-color: #b8c2cc;
+    }
+
+    .time-input:focus {
+      outline: none;
+      border-color: var(--focus-color);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+    }
+
+    .time-label {
+      font-size: 15px;
+      color: var(--my-light-color);
+      font-weight: 600;
+      white-space: nowrap;
+      margin: 0 8px;
+    }
+
+    /* 两列宽度div样式 - 整体居中显示 */
+    .full-width-header {
+      width: 100%;
+      display: flex;
+      justify-content: center; /* 整体水平居中 */
+      margin-bottom: 25px;
+      padding: 15px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center; /* 内部内容水平居中 */
+    }
+
+    .header-label {
+      font-weight: 600;
+      font-size: 16px;
+      text-align: right;
+      padding-right: 20px;
+      color: var(--my-light-color);
+    }
+
+    .header-select {
+      height: 42px;
+      padding: 10px 15px;
+      font-size: 15px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      color: var(--my-light-color);
+      background-color: white;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 16px;
+      padding-right: 45px;
+      min-width: 250px;
+    }
+
+    .header-select:hover {
+      border-color: #b8c2cc;
+    }
+
+    .header-select:focus {
+      outline: none;
+      border-color: var(--focus-color);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+    }
+
+    /* 投捡参数复选框组样式 - 保持高度一致且不换行 */
+    .tj-checkbox-group {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: nowrap; /* 禁止换行 */
+      gap: 15px;
+      margin-bottom: 22px;
+      min-height: 48px; /* 与form-group的min-height保持一致 */
+      padding: 8px 12px;
+      background-color: rgba(52, 152, 219, 0.05);
+      border-radius: 8px;
+      width: 100%;
+      overflow-x: auto; /* 如果内容太多可以横向滚动 */
+      overflow-y: hidden;
+    }
+
+    .tj-checkbox {
+      display: flex;
+      align-items: center;
+      white-space: nowrap; /* 防止文本换行 */
+      flex-shrink: 0; /* 防止复选框被压缩 */
+    }
+
+    .tj-checkbox input {
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+      accent-color: var(--checkbox-color);
+      cursor: pointer;
+      flex-shrink: 0; /* 防止复选框被压缩 */
+    }
+
+    .tj-checkbox label {
+      font-size: 12px;
+      color: var(--my-light-color);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+
+    /* 表格容器样式 */
+    .table-container {
+      margin-top: 20px;
+      width: 100%;
+      overflow-y: auto;
+      max-height: 500px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+    }
+
+    /* 表格样式 */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .data-table th {
+      background-color: #f8f9fa;
+      padding: 12px 8px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--my-light-color);
+      border-bottom: 2px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .data-table td {
+      padding: 10px 8px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    .data-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .data-table tr:hover {
+      background-color: #f0f7ff;
+    }
+
+    /* 表格中的下拉列表样式 */
+    .table-select {
+      width: 100%;
+      height: 34px;
+      padding: 6px 10px;
+      font-size: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: white;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 14px;
+      padding-right: 30px;
+    }
+
+    .table-select:hover {
+      border-color: #b8c2cc;
+    }
+
+    .table-select:focus {
+      outline: none;
+      border-color: var(--focus-color);
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.1);
+    }
+
+    /* 序号列样式 */
+    .serial-column {
+      font-weight: 600;
+      color: var(--my-light-color);
+    }
+
+    /* 输出状态复选框组样式 */
+    .output-status-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2px;
+      min-height: 48px;
+    }
+
+    .output-status-label {
+      flex: 0 0 160px;
+      font-weight: 600;
+      font-size: 15px;
+      text-align: right;
+      padding-right: 20px;
+      color: var(--my-light-color);
+    }
+
+    .output-status-checkboxes {
+      flex: 1;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 20px; /* 复选框之间的间距 */
+      max-width: 320px;
+    }
+
+    .output-status-checkbox {
+      display: flex;
+      align-items: center;
+    }
+
+    .output-status-checkbox input {
+      width: 25px; /* 与Android布局一致 */
+      height: 25px;
+      accent-color: var(--checkbox-color);
+      cursor: pointer;
+    }
+
+    /* 隐藏checkbox的label文本，因为只有复选框没有文字 */
+    .output-status-checkbox label {
+      display: none;
+    }
+
+
+    /* 输出配置组样式 */
+    .output-config-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 17px; /* 30dp-5dp，因为Android有5dp底部边距 */
+      min-height: 48px;
+    }
+
+    .output-config-label {
+      flex: 0 0 160px;
+      font-weight: 500; /* 正常字体，不是bold */
+      font-size: 15px;
+      text-align: right;
+      padding-right: 20px;
+      color: var(--my-light-color);
+    }
+
+    .output-config-controls {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      max-width: 320px;
+    }
+
+    .output-config-checkbox {
+      display: flex;
+      align-items: center;
+      flex: 0 0 80px; /* 与Android的80dp对应 */
+    }
+
+    .output-config-checkbox input {
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
+      accent-color: var(--checkbox-color);
+      cursor: pointer;
+    }
+
+    .output-config-checkbox label {
+      font-size: 14px;
+      color: var(--my-light-color);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .output-config-select {
+      flex: 1;
+      height: 42px;
+      padding: 10px 15px;
+      font-size: 15px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      color: var(--my-light-color);
+      background-color: white;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 16px;
+      padding-right: 45px;
+    }
+
+    /* 时间范围表格样式 - 调整后的加大版本 */
+    .time-table-container {
+      margin: 0 20px; /* Android:layout_marginStart="20dp" layout_marginEnd="20dp" */
+      width: calc(100% - 40px);
+    }
+
+    /* 表头样式 - 增大 */
+    .time-table-header {
+      display: flex;
+      width: 100%;
+      height: 40px; /* 从30px增大到40px */
+      align-items: center;
+      background-color: #f8f9fa;
+      border: 1px solid #d1d8e0;
+      border-bottom: none;
+      font-size: 14px; /* 表头字体增大 */
+    }
+
+    .time-header-cell {
+      flex: 1;
+      text-align: center;
+      font-size: 14px; /* 从12px增大到14px */
+      font-weight: bold;
+      color: #2c3e50;
+      padding: 0;
+    }
+
+    /* 表格主体 */
+    .time-table-body {
+      border: 1px solid #d1d8e0;
+      border-top: none;
+    }
+
+    /* 表格行样式 - 增大 */
+    .time-table-row {
+      display: flex;
+      width: 100%;
+      height: 40px; /* 从30px增大到40px */
+      align-items: center;
+      border-bottom: 1px solid #d1d8e0;
+      background-color: white;
+      cursor: pointer;
+      font-size: 14px; /* 行内字体增大 */
+    }
+
+    .time-table-row:last-child {
+      border-bottom: none;
+    }
+
+    /* 选中行样式 */
+    .time-table-row.selected {
+      background-color: #ff9800 !important; /* 橙色背景 */
+    }
+
+    /* 表格单元格 */
+    .time-table-cell {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      margin: 0;
+    }
+
+    /* 序号单元格 - 字体增大 */
+    .serial-cell {
+      font-size: 14px; /* 从12px增大到14px */
+      font-weight: bold;
+      color: #2c3e50;
+      border-right: 1px solid #d1d8e0;
+    }
+
+    .time-table-row.selected .serial-cell {
+      color: white;
+    }
+
+    /* 时间输入组 */
+    .time-input-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      gap: 5px; /* 间距适当增大 */
+    }
+
+    /* 开始时间文本 - 增大 */
+    .time-text {
+      width: 35px; /* 从25px增大到35px */
+      height: 30px; /* 从22px增大到30px */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px; /* 从12px增大到14px */
+      color: #2c3e50;
+      background-color: transparent;
+      border: none;
+    }
+
+    .time-table-row.selected .time-text {
+      color: white;
+    }
+
+    /* 结束时间输入框 - 增大 */
+    .time-input.end-time {
+      width: 35px; /* 从25px增大到35px */
+      height: 30px; /* 从22px增大到30px */
+      padding: 0;
+      margin: 0;
+      font-size: 14px; /* 从12px增大到14px */
+      text-align: center;
+      border: 1px solid #d1d8e0;
+      border-radius: 3px; /* 圆角稍微增大 */
+      background-color: white;
+      color: #2c3e50;
+      outline: none;
+    }
+
+    /* 焦点状态 */
+    .time-input.end-time:focus {
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+
+    .time-table-row.selected .time-input.end-time {
+      background-color: white;
+      color: #2c3e50;
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* 时间分隔符 - 增大 */
+    .time-separator {
+      font-size: 14px; /* 从12px增大到14px */
+      font-weight: bold;
+      color: #2c3e50;
+      margin: 0 5px; /* 间距增大 */
+    }
+
+    .time-table-row.selected .time-separator {
+      color: white;
+    }
+
+    /* 表格底部 - 增大 */
+    .table-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px; /* 从5px增大到10px */
+      height: 40px; /* 从30px增大到40px */
+    }
+
+    .selected-info {
+      font-size: 14px; /* 从12px增大到14px */
+      color: #2c3e50;
+      font-weight: 500;
+    }
+
+    /* 输入框的占位符样式 */
+    .time-input.end-time::placeholder {
+      color: #95a5a6;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    /* 数字输入框限制 */
+    .time-input.end-time::-webkit-outer-spin-button,
+    .time-input.end-time::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+      height: 30px;
+    }
+
+    .time-input.end-time[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    /* 滚动条样式（如果内容超出） */
+    .time-table-body {
+      max-height: 500px; /* 设置最大高度 */
+      overflow-y: auto;
+    }
+
+    .time-table-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .time-table-body::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .time-table-body::-webkit-scrollbar-thumb {
+      background: #c1c1c1;
+      border-radius: 4px;
+    }
+
+    .time-table-body::-webkit-scrollbar-thumb:hover {
+      background: #a8a8a8;
+    }
+  </style>
+</head>
+<body ng-app="speed" ng-controller="jsd_paramController">
+<div class="app-container">
+  <!-- 左侧按钮区域 -->
+  <div class="left-panel">
+    <div class="title-bar">
+      <div class="title-icon" onclick="window.location.reload();">
+        <i class="fas fa-cog"></i>
+      </div>
+      <div class="title-text">警闪灯参数设置</div>
+    </div>
+
+    <div class="menu-container">
+      <div class="menu-item active" data-target="work-type">
+        <div class="menu-icon">⚙</div>
+        <div class="menu-text">工作方式选择</div>
+      </div>
+
+      <div class="menu-item" data-target="custom-light">
+        <div class="menu-icon">💡</div>
+        <div class="menu-text">自定义闪灯编辑</div>
+      </div>
+
+      <div class="menu-item" data-target="time-scheme">
+        <div class="menu-icon">🔧</div>
+        <div class="menu-text">时段方案设置</div>
+      </div>
+
+      <div class="menu-item" data-target="special-day">
+        <div class="menu-icon">⛏️</div>
+        <div class="menu-text">特殊日设置</div>
+      </div>
+
+      <div class="menu-item" data-target="channel-trigger">
+        <div class="menu-icon">⛓️</div>
+        <div class="menu-text">通道触发参数</div>
+      </div>
+
+      <div class="menu-item" data-target="voice-trigger">
+        <div class="menu-icon">🎵</div>
+        <div class="menu-text">语音触发参数</div>
+      </div>
+
+      <div class="menu-item" data-target="custom-light-trigger">
+        <div class="menu-icon">🔨</div>
+        <div class="menu-text">自定义闪灯触发参数</div>
+      </div>
+
+      <div class="menu-item" data-target="network">
+        <div class="menu-icon">🌏</div>
+        <div class="menu-text">网络及通讯参数</div>
+      </div>
+
+      <div class="menu-item" data-target="power">
+        <div class="menu-icon">🔋</div>
+        <div class="menu-text">电源管理参数</div>
+      </div>
+
+      <div class="menu-item" data-target="posture">
+        <div class="menu-icon">🔧</div>
+        <div class="menu-text">姿态及传感器参数</div>
+      </div>
+
+      <div class="menu-item" data-target="other">
+        <div class="menu-icon">🪛</div>
+        <div class="menu-text">其它参数</div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="action-btn read-btn" id="readBtn" ng-click="reReadParams()">
+        <i class="fas fa-sync-alt"></i> 重新查询参数
+      </button>
+      <button class="action-btn send-btn" id="sendBtn" ng-click="downloadParams()">
+        <i class="fas fa-download"></i> 下载参数
+      </button>
+    </div>
+  </div>
+
+  <!-- 右侧参数设置区域 -->
+  <div class="right-panel">
+    <div class="param-header">
+      <div class="param-title">
+        <i class="fas fa-cogs"></i>
+        <span id="currentParamTitle">工作方式选择</span>
+      </div>
+    </div>
+
+    <div id="statusMessage" class="status-message"></div>
+
+    <div class="param-content">
+
+      <!--工作方式选择-->
+      <div id="work-type" class="container param-section">
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--工作方式-->
+            <div class="form-group">
+              <label class="form-label">工作方式:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdWorkTypeSys.gzfs" class="form-control">
+                  <option value="0">黄闪</option>
+                  <option value="1">4格爆闪</option>
+                  <option value="2">6格爆闪</option>
+                  <option value="3">指定输出</option>
+                  <option value="4">自定义闪灯</option>
+                  <option value="5">多时段</option>
+                </select>
+              </div>
+            </div>
+
+            <!--指定输出模式参数-->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">指定输出模式参数:</label>
+            </div>
+
+            <!-- 输出状态 -->
+            <div class="output-status-group">
+              <label class="output-status-label">输出状态:</label>
+              <div class="output-status-checkboxes">
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sc1" ng-model="jsdSys.jsdWorkTypeSys.sczt[0]">
+                  <label for="cb_sc1">1</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sc2" ng-model="jsdSys.jsdWorkTypeSys.sczt[1]">
+                  <label for="cb_sc2">2</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sc3" ng-model="jsdSys.jsdWorkTypeSys.sczt[2]">
+                  <label for="cb_sc3">3</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sc4" ng-model="jsdSys.jsdWorkTypeSys.sczt[3]">
+                  <label for="cb_sc4">4</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sc5" ng-model="jsdSys.jsdWorkTypeSys.sczt[4]">
+                  <label for="cb_sc5">5</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sc6" ng-model="jsdSys.jsdWorkTypeSys.sczt[5]">
+                  <label for="cb_sc6">6</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 闪灯状态 -->
+            <div class="output-status-group">
+              <label class="output-status-label">闪灯状态:</label>
+              <div class="output-status-checkboxes">
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sd1" ng-model="jsdSys.jsdWorkTypeSys.sdzt[0]">
+                  <label for="cb_sd1">1</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sd2" ng-model="jsdSys.jsdWorkTypeSys.sdzt[1]">
+                  <label for="cb_sd2">2</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sd3" ng-model="jsdSys.jsdWorkTypeSys.sdzt[2]">
+                  <label for="cb_sd3">3</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sd4" ng-model="jsdSys.jsdWorkTypeSys.sdzt[3]">
+                  <label for="cb_sd4">4</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sd5" ng-model="jsdSys.jsdWorkTypeSys.sdzt[4]">
+                  <label for="cb_sd5">5</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sd6" ng-model="jsdSys.jsdWorkTypeSys.sdzt[5]">
+                  <label for="cb_sd6">6</label>
+                </div>
+              </div>
+            </div>
+
+            <!--自定义闪灯模式参数-->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">自定义闪灯模式参数:</label>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">起始阶段:</label>
+                <input type="text" ng-model ="jsdSys.jsdWorkTypeSys.qsjd" class="form-control"  placeholder="请输入起始阶段" maxlength="2">
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+            <label class="form-label">阶段数量:</label>
+            <input type="text" ng-model ="jsdSys.jsdWorkTypeSys.jdsl" class="form-control"  placeholder="请输入阶段数量" maxlength="2">
+          </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+            <label class="form-label">同步参数:</label>
+            <input type="text" ng-model ="jsdSys.jsdWorkTypeSys.tbcs" class="form-control"  placeholder="请输入同步参数" maxlength="3">
+          </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">同步周期:</label>
+              <input type="text" ng-model ="jsdSys.jsdWorkTypeSys.tbzq" class="form-control"  placeholder="请输入同步周期" maxlength="3">
+            </div>
+
+
+
+
+        </div>
+
+
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--提示语音参数-->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">提示语音参数:</label>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">提示语句:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdWorkTypeSys.tsyj" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">提示间隔:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="jsdSys.jsdWorkTypeSys.tsjg" class="form-control"  placeholder="请输入提示间隔" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!--自定义闪灯编辑-->
+      <div id="custom-light" class="container param-section">
+        <!-- 跨两列宽度的头部设置 -->
+        <div class="full-width-header">
+          <div class="header-content">
+            <label class="header-label">序号:</label>
+            <select ng-model="currentJSDZDYSDIndex" class="header-select" ng-options="item as item+1 for item in jsdZDYSDIndexList">
+            </select>
+          </div>
+        </div>
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!-- 输出1配置 -->
+            <div class="output-config-group">
+              <label class="output-config-label">输出1:</label>
+              <div class="output-config-controls">
+                <div class="output-config-checkbox">
+                  <input type="checkbox" id="cb_sd1_zdysd" ng-model="currentJSTZDYSDSys.sd1">
+                  <label for="cb_sd1_zdysd">闪灯</label>
+                </div>
+                <select ng-model="currentJSTZDYSDSys.sc1" class="output-config-select" ng-options="item.index as item.name for item in jsdZDYSDLightList">
+                </select>
+              </div>
+            </div>
+
+            <!-- 输出2配置 -->
+            <div class="output-config-group">
+              <label class="output-config-label">输出2:</label>
+              <div class="output-config-controls">
+                <div class="output-config-checkbox">
+                  <input type="checkbox" id="cb_sd2_zdysd" ng-model="currentJSTZDYSDSys.sd2">
+                  <label for="cb_sd2_zdysd">闪灯</label>
+                </div>
+                <select ng-model="currentJSTZDYSDSys.sc2" class="output-config-select" ng-options="item.index as item.name for item in jsdZDYSDLightList">
+                </select>
+              </div>
+            </div>
+
+            <!-- 输出3配置 -->
+            <div class="output-config-group">
+              <label class="output-config-label">输出3:</label>
+              <div class="output-config-controls">
+                <div class="output-config-checkbox">
+                  <input type="checkbox" id="cb_sd3_zdysd" ng-model="currentJSTZDYSDSys.sd3">
+                  <label for="cb_sd3_zdysd">闪灯</label>
+                </div>
+                <select ng-model="currentJSTZDYSDSys.sc3" class="output-config-select" ng-options="item.index as item.name for item in jsdZDYSDLightList">
+                </select>
+              </div>
+            </div>
+
+            <!-- 输出4配置 -->
+            <div class="output-config-group">
+              <label class="output-config-label">输出4:</label>
+              <div class="output-config-controls">
+                <div class="output-config-checkbox">
+                  <input type="checkbox" id="cb_sd4_zdysd" ng-model="currentJSTZDYSDSys.sd4">
+                  <label for="cb_sd4_zdysd">闪灯</label>
+                </div>
+                <select ng-model="currentJSTZDYSDSys.sc4" class="output-config-select" ng-options="item.index as item.name for item in jsdZDYSDLightList">
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+
+            <!-- 输出5配置 -->
+            <div class="output-config-group">
+              <label class="output-config-label">输出5:</label>
+              <div class="output-config-controls">
+                <div class="output-config-checkbox">
+                  <input type="checkbox" id="cb_sd5_zdysd" ng-model="currentJSTZDYSDSys.sd5">
+                  <label for="cb_sd5_zdysd">闪灯</label>
+                </div>
+                <select ng-model="currentJSTZDYSDSys.sc5" class="output-config-select" ng-options="item.index as item.name for item in jsdZDYSDLightList">
+                </select>
+              </div>
+            </div>
+
+            <!-- 输出6配置 -->
+            <div class="output-config-group">
+              <label class="output-config-label">输出6:</label>
+              <div class="output-config-controls">
+                <div class="output-config-checkbox">
+                  <input type="checkbox" id="cb_sd6_zdysd" ng-model="currentJSTZDYSDSys.sd6">
+                  <label for="cb_sd6_zdysd">闪灯</label>
+                </div>
+                <select ng-model="currentJSTZDYSDSys.sc6" class="output-config-select" ng-options="item.index as item.name for item in jsdZDYSDLightList">
+                </select>
+              </div>
+            </div>
+
+            <!--步长-->
+            <div class="form-group">
+              <label class="form-label">步长:</label>
+              <input type="text" ng-model="currentJSTZDYSDSys.bc" class="form-control" placeholder="请输入步长" maxlength="3">
+            </div>
+          </div>
+
+          </div>
+        </div>
+
+      <!--时段方案设置-->
+      <div id="time-scheme" class="container param-section">
+        <!-- 跨两列宽度的头部设置 -->
+        <div class="full-width-header">
+          <div class="header-content">
+            <label class="header-label">方案选择:</label>
+            <select ng-model="currentJSDSDFAIndex" class="header-select">
+              <option value="0">工作日时段方案</option>
+              <option value="1">节假日时段方案</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!-- 时间范围设置表格 - Android样式 -->
+            <div class="time-table-container">
+              <!-- 表头 -->
+              <div class="time-table-header">
+                <div class="time-header-cell">序号</div>
+                <div class="time-header-cell">开始时间</div>
+                <div class="time-header-cell">结束时间</div>
+              </div>
+
+              <!-- 表格主体 -->
+              <div class="time-table-body">
+                <!-- 第1行 -->
+                <div class="time-table-row"
+                     ng-class="{'selected': selectedRow === 0}"
+                     ng-click="selectRow(0)">
+                  <div class="time-table-cell serial-cell">1</div>
+                  <div class="time-table-cell">
+                    <div class="time-input-group">
+                      <span class="time-text">{{timeRows[0].startHour}}</span>
+                      <span class="time-separator">:</span>
+                      <span class="time-text">{{timeRows[0].startMinute}}</span>
+                    </div>
+                  </div>
+                  <div class="time-table-cell">
+                    <div class="time-input-group">
+                      <input type="text"
+                             class="time-input end-time"
+                             ng-model="timeRows[0].endHour"
+                             ng-change="updateNextStartTime(0)"
+                             maxlength="2">
+                      <span class="time-separator">:</span>
+                      <input type="text"
+                             class="time-input end-time"
+                             ng-model="timeRows[0].endMinute"
+                             ng-change="updateNextStartTime(0)"
+                             maxlength="2">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 第2行 -->
+                <div class="time-table-row"
+                     ng-class="{'selected': selectedRow === 1}"
+                     ng-click="selectRow(1)">
+                  <div class="time-table-cell serial-cell">2</div>
+                  <div class="time-table-cell">
+                    <div class="time-input-group">
+                      <span class="time-text">{{timeRows[1].startHour}}</span>
+                      <span class="time-separator">:</span>
+                      <span class="time-text">{{timeRows[1].startMinute}}</span>
+                    </div>
+                  </div>
+                  <div class="time-table-cell">
+                    <div class="time-input-group">
+                      <input type="text"
+                             class="time-input end-time"
+                             ng-model="timeRows[1].endHour"
+                             ng-change="updateNextStartTime(1)"
+                             maxlength="2">
+                      <span class="time-separator">:</span>
+                      <input type="text"
+                             class="time-input end-time"
+                             ng-model="timeRows[1].endMinute"
+                             ng-change="updateNextStartTime(1)"
+                             maxlength="2">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 第3-9行使用ng-repeat -->
+                <div class="time-table-row"
+                     ng-repeat="row in timeRows track by $index"
+                     ng-if="$index >= 2 && $index <= 8"
+                     ng-class="{'selected': selectedRow === $index}"
+                     ng-click="selectRow($index)">
+                  <div class="time-table-cell serial-cell">{{$index + 1}}</div>
+                  <div class="time-table-cell">
+                    <div class="time-input-group">
+                      <span class="time-text">{{row.startHour}}</span>
+                      <span class="time-separator">:</span>
+                      <span class="time-text">{{row.startMinute}}</span>
+                    </div>
+                  </div>
+                  <div class="time-table-cell">
+                    <div class="time-input-group">
+                      <input type="text"
+                             class="time-input end-time"
+                             ng-model="row.endHour"
+                             ng-change="updateNextStartTime($index)"
+                             maxlength="2">
+                      <span class="time-separator">:</span>
+                      <input type="text"
+                             class="time-input end-time"
+                             ng-model="row.endMinute"
+                             ng-change="updateNextStartTime($index)"
+                             maxlength="2">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 第10行 -->
+                <div class="time-table-row"
+                     ng-class="{'selected': selectedRow === 9}"
+                     ng-click="selectRow(9)">
+                  <div class="time-table-cell serial-cell">10</div>
+                  <div class="time-table-cell">
+                    <div class="time-input-group">
+                      <span class="time-text">{{timeRows[9].startHour}}</span>
+                      <span class="time-separator">:</span>
+                      <span class="time-text">{{timeRows[9].startMinute}}</span>
+                    </div>
+                  </div>
+                  <div class="time-table-cell">
+                    <div class="time-input-group">
+                      <input type="text"
+                             class="time-input end-time"
+                             ng-model="timeRows[9].endHour"
+                             maxlength="2">
+                      <span class="time-separator">:</span>
+                      <input type="text"
+                             class="time-input end-time"
+                             ng-model="timeRows[9].endMinute"
+                             maxlength="2">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 底部信息 -->
+              <div class="table-footer">
+
+                <div class="form-group" style="margin-top: 50px">
+                  <label class="form-label">当前选中: 时段 {{selectedRow + 1}}</label>
+                  <div class="spinner-container">
+                    <button class="action-btn read-btn" ng-click="updateSD()">
+                      <i class="fas fa-sync-alt"></i> 更新时段 {{selectedRow + 1}}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+            <!--工作方式-->
+            <div class="form-group">
+              <label class="form-label">工作方式:</label>
+              <div class="spinner-container">
+                <select ng-model="currentJSTSDFASysList[selectedRow].gzfs" class="form-control">
+                  <option value="0">黄闪</option>
+                  <option value="1">4格爆闪</option>
+                  <option value="2">6格爆闪</option>
+                  <option value="3">指定输出</option>
+                  <option value="4">自定义闪灯</option>
+                </select>
+              </div>
+            </div>
+
+            <!--指定输出方式下输出参数-->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">指定输出方式下输出参数:</label>
+            </div>
+
+            <!-- 输出状态 -->
+            <div class="output-status-group">
+              <label class="output-status-label">输出状态:</label>
+              <div class="output-status-checkboxes">
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasc1" ng-model="currentJSTSDFASysList[selectedRow].scztList[0]">
+                  <label for="cb_sc1">1</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasc2" ng-model="currentJSTSDFASysList[selectedRow].scztList[1]">
+                  <label for="cb_sdfasc2">2</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasc3" ng-model="currentJSTSDFASysList[selectedRow].scztList[2]">
+                  <label for="cb_sdfasc3">3</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasc4" ng-model="currentJSTSDFASysList[selectedRow].scztList[3]">
+                  <label for="cb_sdfasc4">4</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasc5" ng-model="currentJSTSDFASysList[selectedRow].scztList[4]">
+                  <label for="cb_sdfasc5">5</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasc6" ng-model="currentJSTSDFASysList[selectedRow].scztList[5]">
+                  <label for="cb_sdfasc6">6</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 闪灯状态 -->
+            <div class="output-status-group">
+              <label class="output-status-label">闪灯状态:</label>
+              <div class="output-status-checkboxes">
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasd1" ng-model="currentJSTSDFASysList[selectedRow].sdztList[0]">
+                  <label for="cb_sd1">1</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasd2" ng-model="currentJSTSDFASysList[selectedRow].sdztList[1]">
+                  <label for="cb_sd2">2</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasd3" ng-model="currentJSTSDFASysList[selectedRow].sdztList[2]">
+                  <label for="cb_sd3">3</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasd4" ng-model="currentJSTSDFASysList[selectedRow].sdztList[3]">
+                  <label for="cb_sd4">4</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasd5" ng-model="currentJSTSDFASysList[selectedRow].sdztList[4]">
+                  <label for="cb_sd5">5</label>
+                </div>
+                <div class="output-status-checkbox">
+                  <input type="checkbox" id="cb_sdfasd6" ng-model="currentJSTSDFASysList[selectedRow].sdztList[5]">
+                  <label for="cb_sd6">6</label>
+                </div>
+              </div>
+            </div>
+
+            <!--定制闪灯工作参数-->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">定制闪灯工作参数:</label>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">起始阶段:</label>
+              <input type="text" ng-model ="currentJSTSDFASysList[selectedRow].qsjd" class="form-control"  placeholder="请输入起始阶段" maxlength="2">
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">阶段数量:</label>
+              <input type="text" ng-model ="currentJSTSDFASysList[selectedRow].jdsl" class="form-control"  placeholder="请输入阶段数量" maxlength="2">
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">同步延迟:</label>
+              <input type="text" ng-model ="currentJSTSDFASysList[selectedRow].tbyc" class="form-control"  placeholder="请输入同步延迟" maxlength="3">
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">同步周期:</label>
+              <input type="text" ng-model ="currentJSTSDFASysList[selectedRow].tbzq" class="form-control"  placeholder="请输入同步周期" maxlength="3">
+            </div>
+
+            <!--投用触发规则-->
+            <div class="form-group">
+              <label class="form-label">投用触发规则:</label>
+              <div class="spinner-container">
+                <select ng-model="currentJSTSDFASysList[selectedRow].tycfgz" class="form-control">
+                  <option value="0">1号</option>
+                  <option value="1">2号</option>
+                </select>
+              </div>
+            </div>
+
+            <!--语音播报参数-->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">语音播报参数:</label>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">提示语句:</label>
+              <div class="spinner-container">
+                <select ng-model="currentJSTSDFASysList[selectedRow].bfyj" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">提示间隔:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="currentJSTSDFASysList[selectedRow].bbjg" class="form-control"  placeholder="请输入播报间隔" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--投用触发规则-->
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">投用触发规则:</label>
+              <div class="spinner-container">
+                <select ng-model="currentJSTSDFASysList[selectedRow].tycfgz1" class="form-control">
+                  <option value="0">1号</option>
+                  <option value="1">2号</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!--特殊日设置-->
+      <div id="special-day" class="container param-section">
+        <!-- 左右两列表格 -->
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                <tr>
+                  <th style="width: 60px;">序号</th>
+                  <th>特殊月</th>
+                  <th>特殊日</th>
+                  <th>时段方案</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- 使用ng-repeat显示前20行数据 -->
+                <tr ng-repeat="item in jsdSys.jsdtsrList | limitTo: 20 track by $index">
+                  <td>{{$index + 1}}</td>
+                  <td>
+                    <select class="table-select" ng-model="item.month">
+                      <option value="0">0</option>
+                      <option value="1">一月</option>
+                      <option value="2">二月</option>
+                      <option value="3">三月</option>
+                      <option value="4">四月</option>
+                      <option value="5">五月</option>
+                      <option value="6">六月</option>
+                      <option value="7">七月</option>
+                      <option value="8">八月</option>
+                      <option value="9">九月</option>
+                      <option value="10">十月</option>
+                      <option value="11">十一月</option>
+                      <option value="12">十二月</option>
+                      <!-- 其他月份选项 -->
+                    </select>
+                  </td>
+                  <td>
+                    <select class="table-select" ng-model="item.day">
+                      <option value="0">0</option>
+                      <option value="1">1日</option>
+                      <option value="2">2日</option>
+                      <option value="3">3日</option>
+                      <option value="4">4日</option>
+                      <option value="5">5日</option>
+                      <option value="6">6日</option>
+                      <option value="7">7日</option>
+                      <option value="8">8日</option>
+                      <option value="9">9日</option>
+                      <option value="10">10日</option>
+                      <option value="11">11日</option>
+                      <option value="12">12日</option>
+                      <option value="13">13日</option>
+                      <option value="14">14日</option>
+                      <option value="15">15日</option>
+                      <option value="16">16日</option>
+                      <option value="17">17日</option>
+                      <option value="18">18日</option>
+                      <option value="19">19日</option>
+                      <option value="20">20日</option>
+                      <option value="21">21日</option>
+                      <option value="22">22日</option>
+                      <option value="23">23日</option>
+                      <option value="24">24日</option>
+                      <option value="25">25日</option>
+                      <option value="26">26日</option>
+                      <option value="27">27日</option>
+                      <option value="28">28日</option>
+                      <option value="29">29日</option>
+                      <option value="30">30日</option>
+                      <option value="31">31日</option>
+                      <!-- 其他日期选项 -->
+                    </select>
+                  </td>
+                  <td>
+                    <select class="table-select" ng-model="item.sdfa">
+                      <option value="0">0</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <!-- 其他时段方案 -->
+                    </select>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                <tr>
+                  <th style="width: 60px;">序号</th>
+                  <th>特殊月</th>
+                  <th>特殊日</th>
+                  <th>时段方案</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- 使用ng-repeat显示后20行数据，使用slice -->
+                <tr ng-repeat="item in jsdSys.jsdtsrList.slice(20, 40) track by $index">
+                  <td>{{$index + 21}}</td>
+                  <td>
+                    <select class="table-select" ng-model="item.month">
+                      <option value="0">0</option>
+                      <option value="1">一月</option>
+                      <option value="2">二月</option>
+                      <option value="3">三月</option>
+                      <option value="4">四月</option>
+                      <option value="5">五月</option>
+                      <option value="6">六月</option>
+                      <option value="7">七月</option>
+                      <option value="8">八月</option>
+                      <option value="9">九月</option>
+                      <option value="10">十月</option>
+                      <option value="11">十一月</option>
+                      <option value="12">十二月</option>
+                      <!-- 其他月份选项 -->
+                    </select>
+                  </td>
+                  <td>
+                    <select class="table-select" ng-model="item.day">
+                      <option value="0">0</option>
+                      <option value="1">1日</option>
+                      <option value="2">2日</option>
+                      <option value="3">3日</option>
+                      <option value="4">4日</option>
+                      <option value="5">5日</option>
+                      <option value="6">6日</option>
+                      <option value="7">7日</option>
+                      <option value="8">8日</option>
+                      <option value="9">9日</option>
+                      <option value="10">10日</option>
+                      <option value="11">11日</option>
+                      <option value="12">12日</option>
+                      <option value="13">13日</option>
+                      <option value="14">14日</option>
+                      <option value="15">15日</option>
+                      <option value="16">16日</option>
+                      <option value="17">17日</option>
+                      <option value="18">18日</option>
+                      <option value="19">19日</option>
+                      <option value="20">20日</option>
+                      <option value="21">21日</option>
+                      <option value="22">22日</option>
+                      <option value="23">23日</option>
+                      <option value="24">24日</option>
+                      <option value="25">25日</option>
+                      <option value="26">26日</option>
+                      <option value="27">27日</option>
+                      <option value="28">28日</option>
+                      <option value="29">29日</option>
+                      <option value="30">30日</option>
+                      <option value="31">31日</option>
+                      <!-- 其他日期选项 -->
+                    </select>
+                  </td>
+                  <td>
+                    <select class="table-select" ng-model="item.sdfa">
+                      <option value="0">0</option>
+                      <option value="1">1</option>
+                      <option value="2">2</option>
+                      <!-- 其他时段方案 -->
+                    </select>
+                  </td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--通道触发规则-->
+      <div id="channel-trigger" class="container param-section">
+        <!-- 跨两列宽度的头部设置 -->
+        <div class="full-width-header">
+          <div class="header-content">
+            <label class="header-label">规则选择:</label>
+            <select ng-model="currentJSDTDCFGZIndex" class="header-select">
+              <option value="0">1号通道</option>
+              <option value="1">2号通道</option>
+              <option value="2">3号通道</option>
+              <option value="3">4号通道</option>
+              <option value="4">5号通道</option>
+              <option value="5">6号通道</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--输出状态-->
+            <div class="form-group">
+              <label class="form-label">输出状态:</label>
+              <div class="spinner-container">
+                <select ng-model="currentJSTDCFGZ.sczt" class="form-control">
+                  <option value="0">关</option>
+                  <option value="1">开</option>
+                  <option value="2">闪</option>
+                  <option value="3">取反</option>
+                </select>
+              </div>
+            </div>
+
+            <!--最大执行时间-->
+            <div class="form-group">
+              <label class="form-label">最大执行时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSTDCFGZ.zdzxsj" class="form-control" placeholder="请输入最大执行时间" maxlength="5">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--恢复延迟时间-->
+            <div class="form-group">
+              <label class="form-label">恢复延迟时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSTDCFGZ.hfycsj" class="form-control" placeholder="请输入恢复延迟时间" maxlength="3">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--投捡参数-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">投捡参数:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj1_td" ng-model="currentJSTDCFGZ.tjList[0]">
+                <label for="cb_tj1_td">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj2_td" ng-model="currentJSTDCFGZ.tjList[1]">
+                <label for="cb_tj2_td">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj3_td" ng-model="currentJSTDCFGZ.tjList[2]">
+                <label for="cb_tj3_td">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj4_td" ng-model="currentJSTDCFGZ.tjList[3]">
+                <label for="cb_tj4_td">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj5_td" ng-model="currentJSTDCFGZ.tjList[4]">
+                <label for="cb_tj5_td">夜间</label>
+              </div>
+            </div>
+
+            <!--触发规则-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">触发规则:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf1_td" ng-model="currentJSTDCFGZ.cfList[0]">
+                <label for="cb_cf1_td">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf2_td" ng-model="currentJSTDCFGZ.cfList[1]">
+                <label for="cb_cf2_td">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf3_td" ng-model="currentJSTDCFGZ.cfList[2]">
+                <label for="cb_cf3_td">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf4_td" ng-model="currentJSTDCFGZ.cfList[3]">
+                <label for="cb_cf4_td">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf5_td" ng-model="currentJSTDCFGZ.cfList[4]">
+                <label for="cb_cf5_td">夜间</label>
+              </div>
+            </div>
+
+            <!--恢复规则-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">恢复规则:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf1_td" ng-model="currentJSTDCFGZ.hfList[0]">
+                <label for="cb_hf1_td">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf2_td" ng-model="currentJSTDCFGZ.hfList[1]">
+                <label for="cb_hf2_td">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf3_td" ng-model="currentJSTDCFGZ.hfList[2]">
+                <label for="cb_hf3_td">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf4_td" ng-model="currentJSTDCFGZ.hfList[3]">
+                <label for="cb_hf4_td">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf5_td"  ng-model="currentJSTDCFGZ.hfList[4]">
+                <label for="cb_hf5_td">夜间</label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!--语音触发规则-->
+      <div id="voice-trigger" class="container param-section">
+        <!-- 跨两列宽度的头部设置 -->
+        <div class="full-width-header">
+          <div class="header-content">
+            <label class="header-label">规则选择:</label>
+            <select ng-model="currentJSDVoiceIndex" class="header-select">
+              <option value="0">规则一</option>
+              <option value="1">规则二</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--播放语句-->
+            <div class="form-group">
+              <label class="form-label">播放语句:</label>
+              <div class="spinner-container">
+                <select ng-model="currentJSDVoiceSys.bfyj" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <!--播报间隔-->
+            <div class="form-group">
+              <label class="form-label">播报间隔:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSDVoiceSys.bbjg" class="form-control" placeholder="请输入播报间隔" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--播报次数-->
+            <div class="form-group">
+              <label class="form-label">播报次数:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSDVoiceSys.bbcs" class="form-control" placeholder="请输入播报次数" maxlength="3">
+                <span class="inline-label">次</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--投捡参数-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">投捡参数:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj1_voice" ng-model="currentJSDVoiceSys.tjList[0]">
+                <label for="cb_tj1_voice">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj2_voice" ng-model="currentJSDVoiceSys.tjList[1]">
+                <label for="cb_tj2_voice">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj3_voice" ng-model="currentJSDVoiceSys.tjList[2]">
+                <label for="cb_tj3_voice">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj4_voice" ng-model="currentJSDVoiceSys.tjList[3]">
+                <label for="cb_tj4_voice">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj5_voice" ng-model="currentJSDVoiceSys.tjList[4]">
+                <label for="cb_tj5_voice">夜间</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj6_voice" ng-model="currentJSDVoiceSys.tjList[5]">
+                <label for="cb_tj6_voice">输出1</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj7_voice" ng-model="currentJSDVoiceSys.tjList[6]">
+                <label for="cb_tj7_voice">输出2</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj8_voice" ng-model="currentJSDVoiceSys.tjList[7]">
+                <label for="cb_tj8_voice">输出3</label>
+              </div>
+            </div>
+
+            <!--触发规则-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">触发规则:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf1_voice" ng-model="currentJSDVoiceSys.cfjList[0]">
+                <label for="cb_cf1_voice">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf2_voice" ng-model="currentJSDVoiceSys.cfjList[1]">
+                <label for="cb_cf2_voice">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf3_voice" ng-model="currentJSDVoiceSys.cfjList[2]">
+                <label for="cb_cf3_voice">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf4_voice" ng-model="currentJSDVoiceSys.cfjList[3]">
+                <label for="cb_cf4_voice">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf5_voice" ng-model="currentJSDVoiceSys.cfjList[4]">
+                <label for="cb_cf5_voice">夜间</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf6_voice" ng-model="currentJSDVoiceSys.cfjList[5]">
+                <label for="cb_cf6_voice">输出1</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf7_voice" ng-model="currentJSDVoiceSys.cfjList[6]">
+                <label for="cb_cf7_voice">输出2</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf8_voice" ng-model="currentJSDVoiceSys.cfjList[7]">
+                <label for="cb_cf8_voice">输出3</label>
+              </div>
+            </div>
+
+            <!--恢复规则-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">恢复规则:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf1_voice" ng-model="currentJSDVoiceSys.hfList[0]">
+                <label for="cb_hf1_voice">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf2_voice" ng-model="currentJSDVoiceSys.hfList[1]">
+                <label for="cb_hf2_voice">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf3_voice" ng-model="currentJSDVoiceSys.hfList[2]">
+                <label for="cb_hf3_voice">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf4_voice" ng-model="currentJSDVoiceSys.hfList[3]">
+                <label for="cb_hf4_voice">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf5_voice"  ng-model="currentJSDVoiceSys.hfList[4]">
+                <label for="cb_hf5_voice">夜间</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf6_voice"  ng-model="currentJSDVoiceSys.hfList[5]">
+                <label for="cb_hf6_voice">输出1</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf7_voice"  ng-model="currentJSDVoiceSys.hfList[6]">
+                <label for="cb_hf7_voice">输出2</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf8_voice"  ng-model="currentJSDVoiceSys.hfList[7]">
+                <label for="cb_hf8_voice">输出3</label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!--自定义闪灯触发规则-->
+      <div id="custom-light-trigger" class="container param-section">
+        <!-- 跨两列宽度的头部设置 -->
+        <div class="full-width-header">
+          <div class="header-content">
+            <label class="header-label">规则选择:</label>
+            <select ng-model="currentJSDZDYSDCFGZIndex" class="header-select">
+              <option value="0">规则一</option>
+              <option value="1">规则二</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+            <!--起始阶段-->
+            <div class="form-group">
+              <label class="form-label">起始阶段:</label>
+              <input type="text" ng-model ="currentJSDZDYSDCFGZ.qsjd" class="form-control"  placeholder="请输入起始阶段" maxlength="2">
+            </div>
+
+            <!--阶段数量-->
+            <div class="form-group">
+              <label class="form-label">阶段数量:</label>
+              <input type="text" ng-model ="currentJSDZDYSDCFGZ.jdsl" class="form-control"  placeholder="请输入阶段数量" maxlength="2">
+            </div>
+
+            <!--同步周期-->
+            <div class="form-group">
+              <label class="form-label">同步周期:</label>
+              <input type="text" ng-model ="currentJSDZDYSDCFGZ.tbzq" class="form-control"  placeholder="请输入同步周期" maxlength="3">
+            </div>
+
+            <!--同步相位差-->
+            <div class="form-group">
+              <label class="form-label">同步相位差:</label>
+              <input type="text" ng-model ="currentJSDZDYSDCFGZ.tbxwc" class="form-control"  placeholder="请输入同步相位差" maxlength="3">
+            </div>
+
+            <!--播放语句-->
+            <div class="form-group">
+              <label class="form-label">播放语句:</label>
+              <div class="spinner-container">
+                <select ng-model="currentJSDZDYSDCFGZ.bfyj" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <!--播报间隔-->
+            <div class="form-group">
+              <label class="form-label">播报间隔:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSDZDYSDCFGZ.bbjg" class="form-control" placeholder="请输入播报间隔" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--播报次数-->
+            <div class="form-group">
+              <label class="form-label">播报次数:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSDZDYSDCFGZ.bbcs" class="form-control" placeholder="请输入播报次数" maxlength="3">
+                <span class="inline-label">次</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--投捡参数-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">投捡参数:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj1" ng-model="currentJSDZDYSDCFGZ.tjList[0]">
+                <label for="cb_tj1">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj2" ng-model="currentJSDZDYSDCFGZ.tjList[1]">
+                <label for="cb_tj2">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj3" ng-model="currentJSDZDYSDCFGZ.tjList[2]">
+                <label for="cb_tj3">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj4" ng-model="currentJSDZDYSDCFGZ.tjList[3]">
+                <label for="cb_tj4">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_tj5" ng-model="currentJSDZDYSDCFGZ.tjList[4]">
+                <label for="cb_tj5">夜间</label>
+              </div>
+            </div>
+
+            <!--触发规则-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">触发规则:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf1" ng-model="currentJSDZDYSDCFGZ.cfList[0]">
+                <label for="cb_cf1">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf2" ng-model="currentJSDZDYSDCFGZ.cfList[1]">
+                <label for="cb_cf2">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf3" ng-model="currentJSDZDYSDCFGZ.cfList[2]">
+                <label for="cb_cf3">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf4" ng-model="currentJSDZDYSDCFGZ.cfList[3]">
+                <label for="cb_cf4">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_cf5" ng-model="currentJSDZDYSDCFGZ.cfList[4]">
+                <label for="cb_cf5">夜间</label>
+              </div>
+            </div>
+
+            <!--恢复规则-->
+            <div class="form-group">
+              <label class="form-label" style="text-align: left">恢复规则:</label>
+            </div>
+            <!-- 投捡参数复选框组 -->
+            <div class="tj-checkbox-group">
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf1" ng-model="currentJSDZDYSDCFGZ.hfList[0]">
+                <label for="cb_hf1">按钮</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf2" ng-model="currentJSDZDYSDCFGZ.hfList[1]">
+                <label for="cb_hf2">超声波</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf3" ng-model="currentJSDZDYSDCFGZ.hfList[2]">
+                <label for="cb_hf3">倾斜</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf4" ng-model="currentJSDZDYSDCFGZ.hfList[3]">
+                <label for="cb_hf4">倒伏</label>
+              </div>
+              <div class="tj-checkbox">
+                <input type="checkbox" id="cb_hf5"  ng-model="currentJSDZDYSDCFGZ.hfList[4]">
+                <label for="cb_hf5">夜间</label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!--网络及通讯参数-->
+      <div id="network" class="container param-section">
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+            <!--设备地址-->
+            <div class="form-group">
+              <label class="form-label">物联网编号:</label>
+              <input type="text" ng-model ="jsdSys.jsdWebNetSys.num" class="form-control"  placeholder="请输入物联网编号" maxlength="5">
+            </div>
+
+            <!--移动运营商-->
+            <div class="form-group">
+              <label class="form-label">移动运营商:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdWebNetSys.ydyys" class="form-control">
+                  <option value="0">无</option>
+                  <option value="1">3</option>
+                  <option value="2">联通</option>
+                  <option value="3">移动</option>
+                </select>
+              </div>
+            </div>
+
+            <!--时区-->
+            <div class="form-group">
+              <label class="form-label">时区:</label>
+              <div class="inline-group">
+                <div class="spinner-container" style="width: 70%">
+                  <select  style="width: 50%" ng-model="jsdSys.jsdWebNetSys.dxbq" class="form-control">
+                    <option value="0">东半球</option>
+                    <option value="1">西半球</option>
+                  </select>
+                </div>
+                <input style="width: 50%;" type="text" ng-model="jsdSys.jsdWebNetSys.sq" class="form-control" placeholder="请输入时区" maxlength="2">
+              </div>
+            </div>
+
+            <!--目标ip地址-->
+            <div class="form-group">
+              <label class="form-label">目标IP地址:</label>
+              <input type="text" ng-model="jsdSys.jsdWebNetSys.mbIP" class="form-control" placeholder="请输入目标IP地址">
+            </div>
+
+            <!--目标ip端口号-->
+            <div class="form-group">
+              <label class="form-label">目标IP端口号:</label>
+              <input type="text" ng-model="jsdSys.jsdWebNetSys.mbPort" class="form-control" placeholder="请输入目标IP端口号" maxlength="5">
+            </div>
+
+            <!--调试目标ip地址-->
+            <div class="form-group">
+              <label class="form-label">调试目标IP地址:</label>
+              <input type="text" ng-model="jsdSys.jsdWebNetSys.tsmbIP" class="form-control" placeholder="请输入调试目标IP地址">
+            </div>
+
+            <!--调试目标ip端口号-->
+            <div class="form-group">
+              <label class="form-label">调试目标IP端口号:</label>
+              <input type="text" ng-model="jsdSys.jsdWebNetSys.tsmbPort" class="form-control" placeholder="请输入调试目标IP端口号" maxlength="5">
+            </div>
+
+            <!--时间服务器ip地址-->
+            <div class="form-group">
+              <label class="form-label">时间服务器IP地址:</label>
+              <input type="text" ng-model="jsdSys.jsdWebNetSys.timeIP" class="form-control" placeholder="请输入时间服务器IP地址">
+            </div>
+
+            <!--时间服务器ip端口号-->
+            <div class="form-group">
+              <label class="form-label">时间服务器IP端口号:</label>
+              <input type="text" ng-model="jsdSys.jsdWebNetSys.timePort" class="form-control" placeholder="请输入时间服务器IP端口号" maxlength="5">
+            </div>
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+            <!--联机方式-->
+            <div class="form-group">
+              <label class="form-label">联机方式:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdWebNetSys.ljfs" class="form-control">
+                  <option value="0">UDP</option>
+                  <option value="1">TCP</option>
+                </select>
+              </div>
+            </div>
+
+            <!--联机间隔-->
+            <div class="form-group">
+              <label class="form-label">联机间隔:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="jsdSys.jsdWebNetSys.ljjg" class="form-control" placeholder="请输入联机间隔" maxlength="5">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--LORA信道-->
+            <div class="form-group">
+              <label class="form-label">无线信道:</label>
+              <div class="spinner-container">
+                <select style="max-height: 100px" ng-model="jsdSys.jsdWebNetSys.wxxd" class="form-control" ng-options="wxxd as wxxd+1 for wxxd in wxxdList">
+                </select>
+              </div>
+            </div>
+
+            <!--LORA传输速率-->
+            <div class="form-group">
+              <label class="form-label">无线速率:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdWebNetSys.wxsl" class="form-control">
+                  <option value="0">1</option>
+                  <option value="1">2</option>
+                  <option value="2">3</option>
+                  <option value="3">4</option>
+                  <option value="4">5</option>
+                  <option value="5">6</option>
+                  <option value="6">7</option>
+                  <option value="7">8</option>
+                </select>
+              </div>
+            </div>
+
+            <!--主从机-->
+            <div class="form-group">
+              <label class="form-label">系统分机属性:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdWebNetSys.xtfjsx" class="form-control">
+                  <option value="0">主机</option>
+                  <option value="1">分机</option>
+                </select>
+              </div>
+            </div>
+
+            <!--路段编号-->
+            <div class="form-group">
+              <label class="form-label">路段编号:</label>
+              <input type="text" ng-model="jsdSys.jsdWebNetSys.ldbh" class="form-control" placeholder="请输入路段编号" maxlength="2">
+            </div>
+
+            <!--apn-->
+            <div class="form-group">
+              <label class="form-label">apn:</label>
+              <input type="text" ng-model="jsdSys.jsdWebNetSys.apn" class="form-control">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--电源参数-->
+      <div id="power" class="container param-section ">
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--蓄电池电压满度值-->
+            <div class="form-group">
+              <label class="form-label">蓄电池电压满度值:</label>
+              <input type="text" ng-model ="jsdSys.jsdPowerSys.xdcdymdz" class="form-control"  placeholder="请输入蓄电池电压满度值">
+            </div>
+
+            <!--太阳能电压满度值-->
+            <div class="form-group">
+              <label class="form-label">太阳能电压满度值:</label>
+              <input type="text" ng-model ="jsdSys.jsdPowerSys.tyndymdz" class="form-control"  placeholder="请输入太阳能电压满度值">
+            </div>
+
+            <!--充电控制-->
+            <div class="form-group">
+              <label class="form-label">充电控制:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdPowerSys.cdkz" class="form-control" >
+                  <option value="0">控制</option>
+                  <option value="1">不控制</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--电源类型-->
+            <div class="form-group">
+              <label class="form-label">电源类型:</label>
+              <div class="spinner-container">
+                <select ng-model="currentDYLX" class="form-control" >
+                  <option value="0">12V 铅酸电池</option>
+                  <option value="1">11.1V 锂电池</option>
+                  <option value="2">7.4V 锂电池</option>
+                  <option value="2">6V 铅酸电池</option>
+                </select>
+              </div>
+            </div>
+
+            <!--夜间阀值电压-->
+            <div class="form-group">
+              <label class="form-label">夜间阀值电压:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSDPowerDY.yjyzdy" class="form-control" placeholder="请输入夜间阀值电压" maxlength="5">
+                <span class="inline-label">V</span>
+              </div>
+            </div>
+
+            <!--欠压电压-->
+            <div class="form-group">
+              <label class="form-label">欠压电压:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSDPowerDY.qydy" class="form-control" placeholder="请输入欠压电压" maxlength="5">
+                <span class="inline-label">V</span>
+              </div>
+            </div>
+
+            <!--满电电压-->
+            <div class="form-group">
+              <label class="form-label">满电电压:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSDPowerDY.mddy" class="form-control" placeholder="请输入满电电压" maxlength="5">
+                <span class="inline-label">V</span>
+              </div>
+            </div>
+
+            <!--过充电压-->
+            <div class="form-group">
+              <label class="form-label">过充电压:</label>
+              <div class="inline-group">
+                <input type="text" ng-model="currentJSDPowerDY.gcdy" class="form-control" placeholder="请输入过充电压" maxlength="5">
+                <span class="inline-label">V</span>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!--姿态及传感器参数-->
+      <div id="posture" class="container param-section ">
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+            <!--垂直轴-->
+            <div class="form-group">
+              <label class="form-label">垂直轴:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdPoseSys.czz" class="form-control" >
+                  <option value="0">X 轴</option>
+                  <option value="1">Y 轴</option>
+                  <option value="2">Z 轴</option>
+                </select>
+              </div>
+            </div>
+
+            <!--方向-->
+            <div class="form-group">
+              <label class="form-label">方向:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdPoseSys.fx" class="form-control" >
+                  <option value="0">正置</option>
+                  <option value="1">倒置</option>
+                </select>
+              </div>
+            </div>
+
+            <!--灵敏度-->
+            <div class="form-group">
+              <label class="form-label">灵敏度:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdPoseSys.lmd" class="form-control" >
+                  <option value="0">快</option>
+                  <option value="1">正常</option>
+                  <option value="2">慢</option>
+                </select>
+              </div>
+            </div>
+
+            <!--倾斜角阀值-->
+            <div class="form-group">
+              <label class="form-label">倾斜角阀值:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="jsdSys.jsdPoseSys.qxjyz" class="form-control"  placeholder="请输入倾斜角阀值" maxlength="2">
+                <span class="inline-label">度</span>
+              </div>
+            </div>
+
+            <!--接近距离阀值-->
+            <div class="form-group">
+              <label class="form-label">接近距离阀值:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="jsdSys.jsdPoseSys.jjjlyz" class="form-control"  placeholder="请输入接近距离阀值" maxlength="4">
+                <span class="inline-label">米</span>
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--有效保持时间-->
+            <div class="form-group">
+              <label class="form-label">有效保持时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="jsdSys.jsdPoseSys.yxbcsj" class="form-control"  placeholder="请输入有效保持时间" maxlength="3">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--开关有效保持时间-->
+            <div class="form-group">
+              <label class="form-label">开关有效保持时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="jsdSys.jsdPoseSys.kgyxbcsj" class="form-control"  placeholder="请输入开关有效保持时间" maxlength="3">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--长期接近报警时间-->
+            <div class="form-group">
+              <label class="form-label">长期接近报警时间:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdPoseSys.cqjjbjsj" class="form-control" >
+                  <option value="0">不检测</option>
+                  <option value="1">30秒</option>
+                  <option value="2">1分钟</option>
+                  <option value="3">1分30秒</option>
+                  <option value="4">2分钟</option>
+                  <option value="5">2分30秒</option>
+                  <option value="6">3分钟</option>
+                  <option value="7">3分30秒</option>
+                  <option value="8">4分钟</option>
+                  <option value="9">4分30秒</option>
+                  <option value="10">5分钟</option>
+                  <option value="11">5分30秒</option>
+                  <option value="12">6分钟</option>
+                  <option value="13">6分30秒</option>
+                  <option value="14">7分钟</option>
+                  <option value="15">7分30秒</option>
+                </select>
+              </div>
+            </div>
+
+            <!--开关粘连报警时间-->
+            <div class="form-group">
+              <label class="form-label">开关粘连报警时间:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdPoseSys.kgzlbjsj" class="form-control" >
+                  <option value="0">不检测</option>
+                  <option value="1">30秒</option>
+                  <option value="2">1分钟</option>
+                  <option value="3">1分30秒</option>
+                  <option value="4">2分钟</option>
+                  <option value="5">2分30秒</option>
+                  <option value="6">3分钟</option>
+                  <option value="7">3分30秒</option>
+                  <option value="8">4分钟</option>
+                  <option value="9">4分30秒</option>
+                  <option value="10">5分钟</option>
+                  <option value="11">5分30秒</option>
+                  <option value="12">6分钟</option>
+                  <option value="13">6分30秒</option>
+                  <option value="14">7分钟</option>
+                  <option value="15">7分30秒</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!--其它-->
+      <div id="other" class="container param-section ">
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--自编程闪灯时钟-->
+            <div class="form-group">
+              <label class="form-label">自编程闪灯时钟:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdOtherSys.zbcsdsz" class="form-control" >
+                  <option value="0">10ms</option>
+                  <option value="1">100ms</option>
+                  <option value="2">1s</option>
+                </select>
+              </div>
+            </div>
+
+            <!--节假日选项-->
+            <div class="form-group">
+              <label class="form-label">节假日选项:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdOtherSys.jjrxx" class="form-control" >
+                  <option value="0">周六,日</option>
+                  <option value="1">仅周日</option>
+                  <option value="2">双号</option>
+                </select>
+              </div>
+            </div>
+
+            <!--黄慢模式-->
+            <div class="form-group">
+              <label class="form-label">黄慢模式:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdOtherSys.hmms" class="form-control" >
+                  <option value="0">黄慢平闪</option>
+                  <option value="1">黄慢爆闪</option>
+                </select>
+              </div>
+            </div>
+
+            <!--工作时间-->
+            <div class="form-group">
+              <label class="form-label">工作时间:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdOtherSys.gzsj" class="form-control" >
+                  <option value="0">全天</option>
+                  <option value="1">仅夜间</option>
+                </select>
+              </div>
+            </div>
+
+            <!--主动上报-->
+            <div class="form-group">
+              <label class="form-label">主动上报:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdOtherSys.zdsb" class="form-control" >
+                  <option value="0">不含输出变化</option>
+                  <option value="1">含输出变化</option>
+                </select>
+              </div>
+            </div>
+
+            <!--GPS同步选项-->
+            <div class="form-group">
+              <label class="form-label">GPS同步选项:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdOtherSys.gps" class="form-control" >
+                  <option value="0">普通</option>
+                  <option value="1">精确</option>
+                </select>
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- 右列 -->
+          <div class="column">
+            <!--白天语音音量-->
+            <div class="form-group">
+              <label class="form-label">白天语音音量:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdOtherSys.btyyyl" class="form-control" >
+                  <option value="0">停止播报</option>
+                  <option value="1">2级</option>
+                  <option value="2">4级</option>
+                  <option value="3">6级</option>
+                  <option value="4">8级</option>
+                  <option value="5">10级</option>
+                  <option value="6">12级</option>
+                  <option value="7">14级</option>
+                  <option value="8">16级</option>
+                  <option value="9">18级</option>
+                  <option value="10">20级</option>
+                  <option value="11">22级</option>
+                  <option value="12">24级</option>
+                  <option value="13">26级</option>
+                  <option value="14">28级</option>
+                  <option value="15">30级</option>
+                </select>
+              </div>
+            </div>
+
+            <!--夜间语音音量-->
+            <div class="form-group">
+              <label class="form-label">夜间语音音量:</label>
+              <div class="spinner-container">
+                <select ng-model="jsdSys.jsdOtherSys.yjyyyl" class="form-control" >
+                  <option value="0">停止播报</option>
+                  <option value="1">2级</option>
+                  <option value="2">4级</option>
+                  <option value="3">6级</option>
+                  <option value="4">8级</option>
+                  <option value="5">10级</option>
+                  <option value="6">12级</option>
+                  <option value="7">14级</option>
+                  <option value="8">16级</option>
+                  <option value="9">18级</option>
+                  <option value="10">20级</option>
+                  <option value="11">22级</option>
+                  <option value="12">24级</option>
+                  <option value="13">26级</option>
+                  <option value="14">28级</option>
+                  <option value="15">30级</option>
+                </select>
+              </div>
+            </div>
+
+            <!--节能时段一-->
+            <div class="form-group1" style="margin-bottom: 2px;">
+              <label class="form-label">节能时段一:</label>
+            </div>
+
+            <!-- 时间范围设置 -->
+            <div class="form-group1">
+              <label class="form-label"></label>
+              <div class="time-range-group">
+                <input type="text" class="time-input" ng-model="jsdSys.jsdOtherSys.startHour1"  placeholder="时" maxlength="2">
+                <span class="time-label">时</span>
+                <input type="text" class="time-input" ng-model="jsdSys.jsdOtherSys.startMin1" placeholder="分" maxlength="2">
+                <span class="time-label">~</span>
+                <input type="text" class="time-input" ng-model="jsdSys.jsdOtherSys.endHour1" placeholder="时" maxlength="2">
+                <span class="time-label">时</span>
+                <input type="text" class="time-input" ng-model="jsdSys.jsdOtherSys.endMin1" placeholder="分" maxlength="2">
+                <span class="time-label">分</span>
+              </div>
+            </div>
+
+            <!--节能时段二-->
+            <div class="form-group1" style="margin-bottom: 2px;">
+              <label class="form-label">节能时段二:</label>
+            </div>
+
+            <!-- 时间范围设置 -->
+            <div class="form-group1">
+              <label class="form-label"></label>
+              <div class="time-range-group">
+                <input type="text" class="time-input" ng-model="jsdSys.jsdOtherSys.startHour2"  placeholder="时" maxlength="2">
+                <span class="time-label">时</span>
+                <input type="text" class="time-input" ng-model="jsdSys.jsdOtherSys.startMin2" placeholder="分" maxlength="2">
+                <span class="time-label">~</span>
+                <input type="text" class="time-input" ng-model="jsdSys.jsdOtherSys.endHour2" placeholder="时" maxlength="2">
+                <span class="time-label">时</span>
+                <input type="text" class="time-input" ng-model="jsdSys.jsdOtherSys.endMin2" placeholder="分" maxlength="2">
+                <span class="time-label">分</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    </div>
+</div>
+
+<script>
+  // 在AngularJS控制器中添加验证函数（在jsd_paramController.js中）
+  // 这些函数应该添加到您的JavaScript控制器中
+
+
+  // 页面交互逻辑
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log("页面加载完成，开始初始化交互");
+
+    // 获取所有菜单项
+    const menuItems = document.querySelectorAll('.menu-item');
+    // 获取所有参数内容区域
+    const paramSections = document.querySelectorAll('.param-section');
+    // 获取当前参数标题元素
+    const currentParamTitle = document.getElementById('currentParamTitle');
+
+    // 菜单项点击事件
+    menuItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        console.log("点击菜单项:", this.querySelector('.menu-text').textContent, "目标ID:", targetId);
+
+        // 更新菜单活动状态
+        menuItems.forEach(menuItem => menuItem.classList.remove('active'));
+        this.classList.add('active');
+
+        // 更新参数标题
+        const menuText = this.querySelector('.menu-text').textContent;
+        currentParamTitle.textContent = menuText;
+
+        // 显示对应的参数内容区域
+        paramSections.forEach(section => {
+          console.log("检查参数区域:", section.id);
+          section.classList.remove('active');
+          if (section.id === targetId) {
+            console.log("激活参数区域:", section.id);
+            section.classList.add('active');
+          }
+        });
+
+      });
+    });
+
+
+    // 初始激活第一个菜单项
+    if (menuItems.length > 0) {
+      const firstMenuItem = menuItems[0];
+      const targetId = firstMenuItem.getAttribute('data-target');
+      console.log("初始激活目标ID:", targetId);
+
+      // 确保对应的参数区域显示
+      paramSections.forEach(section => {
+        if (section.id === targetId) {
+          section.classList.add('active');
+        }
+      });
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 为所有输入框添加输入限制
+    const ipInputs = document.querySelectorAll('input[id*="ip"]');
+    ipInputs.forEach(input => {
+      input.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9.]/g, '');
+
+        // 简单的IP格式验证
+        const parts = this.value.split('.');
+        if (parts.length > 4) {
+          this.value = parts.slice(0, 4).join('.');
+        }
+      });
+    });
+
+    // 数字输入框限制
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+      input.addEventListener('input', function(e) {
+        // 移除非数字字符
+        this.value = this.value.replace(/[^0-9]/g, '');
+
+        // 应用最大长度限制
+        if (this.maxLength && this.value.length > this.maxLength) {
+          this.value = this.value.substring(0, this.maxLength);
+        }
+      });
+    });
+
+
+  });
+</script>
+</body>
+</html>

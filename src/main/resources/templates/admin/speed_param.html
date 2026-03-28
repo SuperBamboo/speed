@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>测速设备参数设置</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!--<link rel="stylesheet" href="../../static/plugins/bootstrap/css/bootstrap.min.css">-->
+
+  <!--angularjs-->
+  <script type="text/javascript" src="../../static/plugins/admin/angularjs/angular.min.js"></script>
+  <!--<script type="text/javascript" src="../../static/plugins/jquery/jquery.js"></script>
+  <script type="text/javascript" src="../../static/plugins/bootstrap/js/bootstrap.min.js"></script>-->
+
+  <script src="../../static/js/base.js"></script>
+  <script src="../../static/js/service/socketService.js"></script>
+  <script src="../../static/js/service/warningToneService.js"></script>
+  <script src="../../static/js/service/displayService.js"></script>
+  <script src="../../static/js/controller/speed_paramController.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      color: #333;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    select{
+      text-align: center;
+    }
+
+    .app-container {
+      display: flex;
+      height: 100vh;
+      width: 100%;
+      background-color: #fff;
+    }
+
+    /* 左侧按钮区域 */
+    .left-panel {
+      width: 320px;
+      background-color: #ffffff;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border-right: 1px solid #ddd;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .title-bar {
+      padding: 20px;
+      background-color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .title-icon {
+      width: 40px;
+      height: 40px;
+      background-color: #3498db;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+    }
+
+    .title-icon i {
+      font-size: 22px;
+    }
+
+    .title-text {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #1a252f;
+    }
+
+    .menu-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 15px;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      background-color: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-left: 4px solid transparent;
+      color: black;
+    }
+
+    .menu-item:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      transform: translateX(5px);
+    }
+
+    .menu-item.active {
+      background-color: rgba(52, 152, 219, 0.2);
+      border-left: 4px solid #3498db;
+    }
+
+    .menu-icon {
+      font-size: 18px;
+      width: 30px;
+      text-align: center;
+      margin-right: 12px;
+    }
+
+    .menu-text {
+      font-size: 16px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .action-buttons {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      background-color: rgba(26, 37, 47, 0.7);
+    }
+
+    .action-btn {
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .read-btn {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .read-btn:hover {
+      background-color: #2980b9;
+    }
+
+    .send-btn {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .send-btn:hover {
+      background-color: #219653;
+    }
+
+    /* 右侧参数设置区域 */
+    .right-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .param-header {
+      padding: 20px 30px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #eaeaea;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .param-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .param-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 30px;
+    }
+
+    .param-section {
+      background-color: white;
+      border-radius: 10px;
+      padding: 25px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+      margin-bottom: 25px;
+      border: 1px solid #eee;
+      display: none;
+    }
+
+    .param-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .status-message {
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .status-success {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+
+    .status-error {
+      background-color: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+
+  </style>
+  <style>
+    :root {
+      --my-light-color: #2c3e50;
+      --my-hint-light-color: #95a5a6;
+      --border-color: #d1d8e0;
+      --focus-color: #3498db;
+      --button-bg: #f8f9fa;
+      --button-hover: #3498db;
+      --checkbox-color: #3498db;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', sans-serif;
+    }
+
+    body {
+      background-color: #f8fafc;
+      color: var(--my-light-color);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+      padding: 40px;
+    }
+
+    .two-column-layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+    }
+
+    .column {
+      flex: 1;
+      min-width: 400px;
+    }
+
+    .form-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 22px;
+      min-height: 48px;
+    }
+    .form-group1 {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      min-height: 38px;
+    }
+    .form-group2 {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .form-label {
+      flex: 0 0 160px;
+      font-weight: 600;
+      font-size: 15px;
+      text-align: right;
+      padding-right: 20px;
+      color: var(--my-light-color);
+    }
+
+    .form-control {
+      flex: 1;
+      height: 42px;
+      padding: 10px 15px;
+      font-size: 15px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      color: var(--my-light-color);
+      max-width: 320px;
+      background-color: white;
+    }
+
+    .form-control:hover {
+      border-color: #b8c2cc;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--focus-color);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+    }
+
+    .form-control::placeholder {
+      color: var(--my-hint-light-color);
+      font-size: 14px;
+    }
+
+    .inline-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      max-width: 320px;
+    }
+
+    .inline-group .form-control {
+      flex: 1;
+    }
+
+    .inline-label {
+      font-size: 15px;
+      color: var(--my-light-color);
+      white-space: nowrap;
+      font-weight: 500;
+    }
+
+    select.form-control {
+      cursor: pointer;
+      background-color: white;
+      /* 移除多余的背景箭头，只保留浏览器默认或自定义一个 */
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232c3e50' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 15px center;
+      background-size: 16px;
+      padding-right: 45px;
+    }
+
+    /* 针对不同浏览器的兼容性 */
+    select.form-control::-ms-expand {
+      display: none;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      margin: 12px 0;
+      padding: 5px 0;
+      justify-content: center; /* 添加这一行 */
+    }
+
+    .checkbox-container input {
+      width: 18px;
+      height: 18px;
+      margin-right: 12px;
+      accent-color: var(--checkbox-color);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .checkbox-container label {
+      font-size: 15px;
+      color: var(--my-light-color);
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-top: 50px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+
+    .btn {
+      padding: 13px 45px;
+      font-size: 16px;
+      font-weight: 600;
+      border: 2px solid #e9ecef;
+      border-radius: 6px;
+      background-color: white;
+      color: var(--my-light-color);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 160px;
+    }
+
+    .btn:hover {
+      background-color: var(--button-hover);
+      border-color: var(--button-hover);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+    }
+
+    #btn_determine:hover {
+      background-color: #2980b9;
+      border-color: #2980b9;
+    }
+
+    #btn_cancel:hover {
+      background-color: #7f8c8d;
+      border-color: #7f8c8d;
+    }
+
+    /* 响应式调整 */
+    @media (max-width: 1000px) {
+      .two-column-layout {
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .column {
+        min-width: 100%;
+      }
+
+      body {
+        padding: 20px;
+      }
+
+      .container {
+        padding: 30px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .form-group {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 25px;
+      }
+      .form-group1 {
+        flex-direction: column;
+        align-items: flex-start;
+        margin-bottom: 5px;
+      }
+
+      .form-label {
+        flex: none;
+        text-align: left;
+        width: 100%;
+        margin-bottom: 8px;
+        padding-right: 0;
+        font-size: 14px;
+      }
+
+      .form-control {
+        width: 100%;
+        max-width: none;
+        font-size: 14px;
+      }
+
+      .inline-group {
+        width: 100%;
+      }
+
+      .button-group {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .btn {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+
+    .spinner-container {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    /* 隐藏的元素 */
+    .hidden {
+      display: none;
+    }
+
+    /* 输入框成功状态 */
+    .form-control.valid {
+      border-color: #2ecc71;
+    }
+
+    /* 输入框错误状态 */
+    .form-control.error {
+      border-color: #e74c3c;
+    }
+
+    /* 时间范围输入样式 */
+    .time-range-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2px;
+      min-height: 48px;
+    }
+
+    .time-input {
+      width: 60px;
+      height: 42px;
+      padding: 10px;
+      font-size: 15px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 6px;
+      text-align: center;
+      color: var(--my-light-color);
+      background-color: white;
+      transition: all 0.3s ease;
+    }
+
+    .time-input:hover {
+      border-color: #b8c2cc;
+    }
+
+    .time-input:focus {
+      outline: none;
+      border-color: var(--focus-color);
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.12);
+    }
+
+    .time-label {
+      font-size: 15px;
+      color: var(--my-light-color);
+      font-weight: 600;
+      white-space: nowrap;
+      margin: 0 8px;
+    }
+
+  </style>
+</head>
+<body ng-app="speed" ng-controller="speed_paramController">
+<div class="app-container">
+  <!-- 左侧按钮区域 -->
+  <div class="left-panel">
+    <div class="title-bar">
+      <div class="title-icon" onclick="window.location.reload();">
+        <i class="fas fa-cog"></i>
+      </div>
+      <div class="title-text">测速设备参数设置</div>
+    </div>
+
+    <div class="menu-container">
+
+      <div class="menu-item active" data-target="network">
+        <div class="menu-icon">🌏</div>
+        <div class="menu-text">网络及通讯参数</div>
+      </div>
+
+      <div class="menu-item" data-target="speed-tj">
+        <div class="menu-icon">🕝</div>
+        <div class="menu-text">速度及统计参数</div>
+      </div>
+
+      <div class="menu-item" data-target="power-zt">
+        <div class="menu-icon">🔋</div>
+        <div class="menu-text">电源及姿态参数</div>
+      </div>
+
+      <div class="menu-item" data-target="voice-trigger">
+        <div class="menu-icon">🎵</div>
+        <div class="menu-text">语音提示参数</div>
+      </div>
+
+
+      <div class="menu-item" data-target="display">
+        <div class="menu-icon">☀</div>
+        <div class="menu-text">显示参数</div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="action-btn read-btn" id="readBtn" ng-click="reReadParams()">
+        <i class="fas fa-sync-alt"></i> 重新查询参数
+      </button>
+      <button class="action-btn send-btn" id="sendBtn" ng-click="downloadParams()">
+        <i class="fas fa-download"></i> 下载参数
+      </button>
+    </div>
+  </div>
+
+  <!-- 右侧参数设置区域 -->
+  <div class="right-panel">
+    <div class="param-header">
+      <div class="param-title">
+        <i class="fas fa-cogs"></i>
+        <span id="currentParamTitle">网络及通讯参数</span>
+      </div>
+    </div>
+
+    <div id="statusMessage" class="status-message"></div>
+
+    <div class="param-content">
+      <!--网络及通讯参数-->
+      <div id="network" class="container param-section active">
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+            <!--设备地址-->
+            <div class="form-group">
+              <label class="form-label">物联网编号:</label>
+              <input type="text" ng-model ="speedSys.speedWebNetSys.num" class="form-control" id="et_device_address" placeholder="请输入物联网编号" maxlength="5">
+            </div>
+
+            <!--移动运营商-->
+            <div class="form-group">
+              <label class="form-label">移动运营商:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedWebNetSys.ydyys" class="form-control" id="m_spinner_ydyys">
+                  <option value="0">无</option>
+                  <option value="1">3</option>
+                  <option value="2">联通</option>
+                  <option value="3">移动</option>
+                </select>
+              </div>
+            </div>
+
+            <!--时区-->
+            <div class="form-group">
+              <label class="form-label">时区:</label>
+              <div class="inline-group">
+                <div class="spinner-container" style="width: 70%">
+                  <select  style="width: 50%" ng-model="speedSys.speedWebNetSys.dxbp" class="form-control" id="m_spinner_dx">
+                    <option value="0">东半球</option>
+                    <option value="1">西半球</option>
+                  </select>
+                </div>
+                <input style="width: 50%;" type="text" ng-model="speedSys.speedWebNetSys.sq" class="form-control" id="et_sq" placeholder="请输入时区" maxlength="2">
+              </div>
+            </div>
+
+            <!--目标ip地址-->
+            <div class="form-group">
+              <label class="form-label">目标IP地址:</label>
+              <input type="text" ng-model="speedSys.speedWebNetSys.mbIP" class="form-control" id="et_target_ip" placeholder="请输入目标IP地址">
+            </div>
+
+            <!--目标ip端口号-->
+            <div class="form-group">
+              <label class="form-label">目标IP端口号:</label>
+              <input type="number" ng-model="speedSys.speedWebNetSys.mbPort" class="form-control" id="et_target_port" placeholder="请输入目标IP端口号" maxlength="5">
+            </div>
+
+            <!--调试目标ip地址-->
+            <div class="form-group">
+              <label class="form-label">调试目标IP地址:</label>
+              <input type="text" ng-model="speedSys.speedWebNetSys.tsmbIP" class="form-control" id="et_debug_ip" placeholder="请输入调试目标IP地址">
+            </div>
+
+            <!--调试目标ip端口号-->
+            <div class="form-group">
+              <label class="form-label">调试目标IP端口号:</label>
+              <input type="number" ng-model="speedSys.speedWebNetSys.tsmbPort" class="form-control" id="et_debug_port" placeholder="请输入调试目标IP端口号" maxlength="5">
+            </div>
+
+            <!--时间服务器ip地址-->
+            <div class="form-group">
+              <label class="form-label">时间服务器IP地址:</label>
+              <input type="text" ng-model="speedSys.speedWebNetSys.timeIP" class="form-control" id="et_time_ip" placeholder="请输入时间服务器IP地址">
+            </div>
+
+            <!--时间服务器ip端口号-->
+            <div class="form-group">
+              <label class="form-label">时间服务器IP端口号:</label>
+              <input type="number" ng-model="speedSys.speedWebNetSys.timePort" class="form-control" id="et_time_port" placeholder="请输入时间服务器IP端口号" maxlength="5">
+            </div>
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+            <!--联机方式-->
+            <div class="form-group">
+              <label class="form-label">联机方式:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedWebNetSys.ljfs" class="form-control" id="spinner_connect_type">
+                  <option value="0">UDP</option>
+                  <option value="1">TCP</option>
+                </select>
+              </div>
+            </div>
+
+            <!--联机间隔-->
+            <div class="form-group">
+              <label class="form-label">联机间隔:</label>
+              <div class="inline-group">
+                <input type="number" ng-model="speedSys.speedWebNetSys.ljjg" class="form-control" id="et_ljjg" placeholder="请输入联机间隔" maxlength="5">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--时区（隐藏）-->
+            <div class="form-group hidden">
+              <label class="form-label">时区:</label>
+              <input type="number" class="form-control" id="et_sq1" placeholder="请输入时区" maxlength="2">
+            </div>
+
+            <!--LORA信道-->
+            <div class="form-group">
+              <label class="form-label">无线信道:</label>
+              <div class="spinner-container">
+                <select style="max-height: 100px" ng-model="speedSys.speedWebNetSys.wxxd" class="form-control" id="spinner_wxxd" ng-options="wxxd as wxxd+1 for wxxd in wxxdList">
+                </select>
+              </div>
+            </div>
+
+            <!--LORA传输速率-->
+            <div class="form-group">
+              <label class="form-label">无线速率:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedWebNetSys.wxsl" class="form-control" id="spinner_wxsl">
+                  <option value="0">1</option>
+                  <option value="1">2</option>
+                  <option value="2">3</option>
+                  <option value="3">4</option>
+                  <option value="4">5</option>
+                  <option value="5">6</option>
+                  <option value="6">7</option>
+                  <option value="7">8</option>
+                </select>
+              </div>
+            </div>
+
+            <!--主从机-->
+            <div class="form-group">
+              <label class="form-label">系统分机属性:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedWebNetSys.xtfjsx" class="form-control" id="spinner_zcj">
+                  <option value="0">主机</option>
+                  <option value="1">1号分机</option>
+                  <option value="2">2号分机</option>
+                  <option value="3">3号分机</option>
+                </select>
+              </div>
+            </div>
+
+            <!--复选框区域-->
+            <div class="checkbox-container">
+              <input ng-model="speedSys.speedWebNetSys.flag1" type="checkbox" id="cb_not_send">
+              <label for="cb_not_send">发送分机信息时不发超速标志</label>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.speedWebNetSys.flag2" type="checkbox" id="cb_close_ly">
+              <label for="cb_close_ly">长时间未有蓝牙通讯则关闭蓝牙</label>
+            </div>
+
+            <!--按钮区域-->
+            <!--<div class="button-group">
+              <button class="btn" id="btn_determine">确 定</button>
+              <button class="btn btn-cancel" id="btn_cancel">取 消</button>
+            </div>-->
+          </div>
+        </div>
+      </div>
+
+      <!--速度及统计参数-->
+      <div id="speed-tj" class="container param-section ">
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+
+            <!--测速选项-->
+            <div class="form-group">
+              <label class="form-label">测速选项:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedAndTJSys.sdxx" class="form-control" >
+                  <option value="0">双向</option>
+                  <option value="1">仅去向</option>
+                  <option value="2">仅来向</option>
+                </select>
+              </div>
+            </div>
+
+            <!--雷达通讯协议-->
+            <div class="form-group">
+              <label class="form-label">雷达通讯协议:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedAndTJSys.ldtxxy" class="form-control" >
+                  <option value="0">GS标准</option>
+                  <option value="1">标准输出</option>
+                  <option value="2">扩展A</option>
+                  <option value="3">扩展B</option>
+                </select>
+              </div>
+            </div>
+
+            <!--超速阀值-->
+            <div class="form-group">
+              <label class="form-label">超速阀值:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedAndTJSys.csyz" class="form-control"  placeholder="请输入超速阀值" maxlength="3">
+                <span class="inline-label">Km/h</span>
+              </div>
+            </div>
+
+            <!--有效速度阀值-->
+            <div class="form-group">
+              <label class="form-label">有效速度阀值:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedAndTJSys.yxsdyz" class="form-control"  placeholder="请输入有效速度阀值" maxlength="3">
+                <span class="inline-label">Km/h</span>
+              </div>
+            </div>
+
+            <!--有效速度时间-->
+            <div class="form-group">
+              <label class="form-label">有效速度时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedAndTJSys.yxsdsj" class="form-control"  placeholder="请输入有效速度时间" maxlength="3">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--车速统计周期一参数-->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">车速统计周期一参数:</label>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">超速阀值:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedAndTJSys.csyzZQ1" class="form-control"  placeholder="请输入超速阀值" maxlength="3">
+                <span class="inline-label">Km/h</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">低速阀值:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedAndTJSys.dsyzZQ1" class="form-control"  placeholder="请输入低速阀值" maxlength="3">
+                <span class="inline-label">Km/h</span>
+              </div>
+            </div>
+
+            <!--统计周期-->
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">统计周期:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedAndTJSys.tjzqZQ1" class="form-control" >
+                  <option value="0">1分钟</option>
+                  <option value="1">2分钟</option>
+                  <option value="2">3分钟</option>
+                  <option value="3">5分钟</option>
+                  <option value="4">10分钟</option>
+                  <option value="5">15分钟</option>
+                  <option value="6">20分钟</option>
+                  <option value="7">30分钟</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;">
+              <label class="form-label">最少统计样本数:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedAndTJSys.zdclsZQ1" class="form-control"  placeholder="请输入最少统计样本数" maxlength="3">
+                <span class="inline-label">辆</span>
+              </div>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--车速统计周期一参数-->
+            <div class="form-group" style="margin-bottom: 10px;">
+              <label class="form-label">车速统计周期二参数:</label>
+            </div>
+
+            <!--统计周期-->
+            <div class="form-group" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">统计周期:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedAndTJSys.tjzqZQ2" class="form-control" >
+                  <option value="0">1分钟</option>
+                  <option value="1">2分钟</option>
+                  <option value="2">3分钟</option>
+                  <option value="3">5分钟</option>
+                  <option value="4">10分钟</option>
+                  <option value="5">15分钟</option>
+                  <option value="6">20分钟</option>
+                  <option value="7">30分钟</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-left: 10px;">
+              <label class="form-label">最少统计样本数:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedAndTJSys.zdclsZQ2" class="form-control"  placeholder="请输入最少统计样本数" maxlength="3">
+                <span class="inline-label">辆</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!--电源及姿态参数-->
+      <div id="power-zt" class="container param-section ">
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+
+            <!--电源类型-->
+            <div class="form-group">
+              <label class="form-label">电源类型:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedPowerSys.dylx" class="form-control" >
+                  <option value="0">12V 铅酸电池</option>
+                  <option value="1">11.1V 锂电池</option>
+                  <option value="2">7.4V 锂电池</option>
+                  <option value="2">6V 铅酸电池</option>
+                </select>
+              </div>
+            </div>
+
+            <!--蓄电池电压满度值-->
+            <div class="form-group">
+              <label class="form-label">蓄电池电压满度值:</label>
+                <input type="text" ng-model ="speedSys.speedPowerSys.xdcdymdz" class="form-control"  placeholder="请输入蓄电池电压满度值">
+              </div>
+
+            <!--太阳能电压满度值-->
+            <div class="form-group">
+              <label class="form-label">太阳能电压满度值:</label>
+              <input type="text" ng-model ="speedSys.speedPowerSys.tyndymdz" class="form-control"  placeholder="请输入太阳能电压满度值">
+            </div>
+
+            <!--充电控制-->
+            <div class="form-group">
+              <label class="form-label">充电控制:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedPowerSys.cdkz" class="form-control" >
+                  <option value="0">控制</option>
+                  <option value="1">不控制</option>
+                </select>
+              </div>
+            </div>
+
+        </div>
+
+
+          <!-- 右列 -->
+          <div class="column">
+            <!--垂直轴-->
+            <div class="form-group">
+              <label class="form-label">垂直轴:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedPoseSys.czz" class="form-control" >
+                  <option value="0">X 轴</option>
+                  <option value="1">Y 轴</option>
+                  <option value="2">Z 轴</option>
+                </select>
+              </div>
+            </div>
+
+            <!--方向-->
+            <div class="form-group">
+              <label class="form-label">方向:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedPoseSys.fx" class="form-control" >
+                  <option value="0">正置</option>
+                  <option value="1">倒置</option>
+                </select>
+              </div>
+            </div>
+
+            <!--灵敏度-->
+            <div class="form-group">
+              <label class="form-label">灵敏度:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedPoseSys.lmd" class="form-control" >
+                  <option value="0">快</option>
+                  <option value="1">正常</option>
+                  <option value="2">慢</option>
+                </select>
+              </div>
+            </div>
+
+            <!--倾斜角阀值-->
+            <div class="form-group">
+              <label class="form-label">倾斜角阀值:</label>
+              <input type="text" ng-model ="speedSys.speedPoseSys.qxjyz" class="form-control"  placeholder="请输入倾斜角阀值" maxlength="2">
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!--语音提示参数-->
+      <div id="voice-trigger" class="container param-section ">
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+
+            <!--语音选择-->
+            <div class="form-group1">
+              <label class="form-label">语音选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.yyxz" class="form-control" >
+                  <option value="0">男声</option>
+                  <option value="1">女声</option>
+                </select>
+              </div>
+            </div>
+
+            <!--播放选择-->
+            <div class="form-group1">
+              <label class="form-label">播放选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.bfxz" class="form-control" >
+                  <option value="0">有车即播报</option>
+                  <option value="1">长期播报</option>
+                </select>
+              </div>
+            </div>
+
+            <!--白天语音音量-->
+            <div class="form-group1">
+              <label class="form-label">白天语音音量:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.btyyyl" class="form-control" >
+                  <option value="0">停止播报</option>
+                  <option value="1">2级</option>
+                  <option value="2">4级</option>
+                  <option value="3">6级</option>
+                  <option value="4">8级</option>
+                  <option value="5">10级</option>
+                  <option value="6">12级</option>
+                  <option value="7">14级</option>
+                  <option value="8">16级</option>
+                  <option value="9">18级</option>
+                  <option value="10">20级</option>
+                  <option value="11">22级</option>
+                  <option value="12">24级</option>
+                  <option value="13">26级</option>
+                  <option value="14">28级</option>
+                  <option value="15">30级</option>
+                </select>
+              </div>
+            </div>
+
+            <!--夜间语音音量-->
+            <div class="form-group1" style="margin-bottom: 15px">
+              <label class="form-label">夜间语音音量:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.yjyyyl" class="form-control" >
+                  <option value="0">停止播报</option>
+                  <option value="1">2级</option>
+                  <option value="2">4级</option>
+                  <option value="3">6级</option>
+                  <option value="4">8级</option>
+                  <option value="5">10级</option>
+                  <option value="6">12级</option>
+                  <option value="7">14级</option>
+                  <option value="8">16级</option>
+                  <option value="9">18级</option>
+                  <option value="10">20级</option>
+                  <option value="11">22级</option>
+                  <option value="12">24级</option>
+                  <option value="13">26级</option>
+                  <option value="14">28级</option>
+                  <option value="15">30级</option>
+                </select>
+              </div>
+            </div>
+
+            <!--主机语音选项-->
+            <div class="form-group1" style="margin-bottom: 2px;">
+              <label class="form-label">主机语音选项:</label>
+            </div>
+
+            <!--提示语句-->
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">提示语句:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.tsyj0" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">语句长度:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedVoiceSys.tsyjcd0" class="form-control"  placeholder="请输入语句长度" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--警告语句-->
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">警告语句:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.jgyj0" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">语句长度:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedVoiceSys.jgyjcd0" class="form-control"  placeholder="请输入警告语句长度" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+
+            <!--一号分机选项-->
+            <div class="form-group1" style="margin-bottom: 2px;">
+              <label class="form-label">一号分机选项:</label>
+            </div>
+
+            <!--提示语句-->
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">提示语句:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.tsyj1" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">语句长度:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedVoiceSys.tsyjcd1" class="form-control"  placeholder="请输入语句长度" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--警告语句-->
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">警告语句:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.jgyj1" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">语句长度:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedVoiceSys.jgyjcd1" class="form-control"  placeholder="请输入警告语句长度" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右列 -->
+          <div class="column">
+            <!--二号分机选项-->
+            <div class="form-group1" style="margin-bottom: 2px;">
+              <label class="form-label">二号分机选项:</label>
+            </div>
+
+            <!--提示语句-->
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">提示语句:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.tsyj2" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">语句长度:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedVoiceSys.tsyjcd2" class="form-control"  placeholder="请输入语句长度" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--警告语句-->
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">警告语句:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.jgyj2" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">语句长度:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedVoiceSys.jgyjcd2" class="form-control"  placeholder="请输入警告语句长度" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+
+            <!--三号分机选项-->
+            <div class="form-group1" style="margin-bottom: 2px;">
+              <label class="form-label">三号分机选项:</label>
+            </div>
+
+            <!--提示语句-->
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">提示语句:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.tsyj3" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">语句长度:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedVoiceSys.tsyjcd3" class="form-control"  placeholder="请输入语句长度" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--警告语句-->
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">警告语句:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.speedVoiceSys.jgyj3" class="form-control" ng-options="warningTone.index as warningTone.name for warningTone in warningToneNames">
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group1" style="margin-left: 10px;">
+              <label class="form-label">语句长度:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.speedVoiceSys.jgyjcd3" class="form-control"  placeholder="请输入警告语句长度" maxlength="2">
+                <span class="inline-label">秒</span>
+              </div>
+            </div>
+
+            <!--节能时段一-->
+            <div class="form-group1" style="margin-bottom: 2px;">
+              <label class="form-label">节能时段一:</label>
+            </div>
+
+            <!-- 时间范围设置 -->
+            <div class="form-group1">
+              <label class="form-label"></label>
+              <div class="time-range-group">
+                <input type="text" class="time-input" ng-model="speedSys.speedVoiceSys.jnsd1HourStart"  placeholder="时" maxlength="2">
+                <span class="time-label">时</span>
+                <input type="text" class="time-input" ng-model="speedSys.speedVoiceSys.jnsd1MinStart" placeholder="分" maxlength="2">
+                <span class="time-label">~</span>
+                <input type="text" class="time-input" ng-model="speedSys.speedVoiceSys.jnsd1HourEnd" placeholder="时" maxlength="2">
+                <span class="time-label">时</span>
+                <input type="text" class="time-input" ng-model="speedSys.speedVoiceSys.jnsd1MinEnd" placeholder="分" maxlength="2">
+                <span class="time-label">分</span>
+              </div>
+            </div>
+
+            <!--节能时段二-->
+            <div class="form-group1" style="margin-bottom: 2px;">
+              <label class="form-label">节能时段二:</label>
+            </div>
+
+            <!-- 时间范围设置 -->
+            <div class="form-group1">
+              <label class="form-label"></label>
+              <div class="time-range-group">
+                <input type="text" class="time-input" ng-model="speedSys.speedVoiceSys.jnsd2HourStart"  placeholder="时" maxlength="2">
+                <span class="time-label">时</span>
+                <input type="text" class="time-input" ng-model="speedSys.speedVoiceSys.jnsd2MinStart" placeholder="分" maxlength="2">
+                <span class="time-label">~</span>
+                <input type="text" class="time-input" ng-model="speedSys.speedVoiceSys.jnsd2HourEnd" placeholder="时" maxlength="2">
+                <span class="time-label">时</span>
+                <input type="text" class="time-input" ng-model="speedSys.speedVoiceSys.jnsd2MinEnd" placeholder="分" maxlength="2">
+                <span class="time-label">分</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!--显示参数参数-->
+      <div id="display" class="container param-section ">
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--主机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder">主机正常显示方案:</label>
+            </div>
+
+            <!--显示一-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示一(必选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[0].zxz1" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[0].xsys1" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[0].tlsj1" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[0].crjssd1" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--主机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder;color: #FFFFFF">主机正常显示方案:</label>
+            </div>
+
+            <!--显示二-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示二(可不选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[0].zxz2" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[0].xsys2" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[0].tlsj2" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[0].crjssd2" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--主机超速显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder">主机超速显示方案:</label>
+            </div>
+
+            <!--显示一-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示一(必选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[1].zxz1" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[1].xsys1" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[1].tlsj1" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[1].crjssd1" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--主机超速显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder;color: #FFFFFF">主机超速显示方案:</label>
+            </div>
+
+            <!--显示二-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示二(可不选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[1].zxz2" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[1].xsys2" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[1].tlsj2" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[1].crjssd2" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--一号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder">一号分机正常显示方案:</label>
+            </div>
+
+            <!--显示一-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示一(必选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[2].zxz1" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[2].xsys1" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[2].tlsj1" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[2].crjssd1" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--一号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder;color: #FFFFFF">一号分机正常显示方案:</label>
+            </div>
+
+            <!--显示二-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示二(可不选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[2].zxz2" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[2].xsys2" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[2].tlsj2" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[2].crjssd2" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--一号分机超速显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder">一号分机超速显示方案:</label>
+            </div>
+
+            <!--显示一-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示一(必选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[3].zxz1" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[3].xsys1" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[3].tlsj1" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[3].crjssd1" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--一号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder;color: #FFFFFF">一号分机超速显示方案:</label>
+            </div>
+
+            <!--显示二-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示二(可不选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[3].zxz2" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[3].xsys2" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[3].tlsj2" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[3].crjssd2" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--二号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder">二号分机正常显示方案:</label>
+            </div>
+
+            <!--显示一-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示一(必选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[4].zxz1" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[4].xsys1" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[4].tlsj1" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[4].crjssd1" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--一号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder;color: #FFFFFF">二号分机正常显示方案:</label>
+            </div>
+
+            <!--显示二-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示二(可不选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[4].zxz2" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[4].xsys2" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[4].tlsj2" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[4].crjssd2" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--二号分机超速显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder">二号分机超速显示方案:</label>
+            </div>
+
+            <!--显示一-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示一(必选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[5].zxz1" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[5].xsys1" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[5].tlsj1" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[5].crjssd1" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--一号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder;color: #FFFFFF">二号分机超速显示方案:</label>
+            </div>
+
+            <!--显示二-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示二(可不选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[5].zxz2" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[5].xsys2" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[5].tlsj2" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[5].crjssd2" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--三号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder">三号分机正常显示方案:</label>
+            </div>
+
+            <!--显示一-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示一(必选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[6].zxz1" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[6].xsys1" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[6].tlsj1" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[6].crjssd1" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--一号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder;color: #FFFFFF">三号分机正常显示方案:</label>
+            </div>
+
+            <!--显示二-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示二(可不选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[6].zxz2" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[6].xsys2" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[6].tlsj2" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[6].crjssd2" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="two-column-layout">
+          <!-- 左列 -->
+          <div class="column">
+
+            <!--二号分机超速显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder">三号分机超速显示方案:</label>
+            </div>
+
+            <!--显示一-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示一(必选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[7].zxz1" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[7].xsys1" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[7].tlsj1" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[7].crjssd1" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+          <!-- 右列 -->
+          <div class="column">
+
+            <!--一号分机正常显示方案-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label style="font-size: large;font-weight: bolder;color: #FFFFFF">三号分机超速显示方案:</label>
+            </div>
+
+            <!--显示二-->
+            <div class="form-group2" style="margin-bottom: 10px;">
+              <label class="form-label">显示二(可不选):</label>
+            </div>
+
+            <!--帧选择-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">帧选择:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[7].zxz2" class="form-control" ng-options="display.index as display.name for display in displayNames">
+                </select>
+              </div>
+            </div>
+
+            <!--显示颜色-->
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">显示颜色:</label>
+              <div class="spinner-container">
+                <select ng-model="speedSys.disPlayFAList[7].xsys2" class="form-control">
+                  <option value="0">跟随</option>
+                  <option value="1">红色</option>
+                  <option value="2">绿色</option>
+                  <option value="3">黄色</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group2" style="margin-left: 10px;margin-bottom: 10px;">
+              <label class="form-label">停留时间:</label>
+              <div class="inline-group">
+                <input type="text" ng-model ="speedSys.disPlayFAList[7].tlsj2" class="form-control"  placeholder="请输入停留时间" maxlength="3">
+                <span class="inline-label">* 0.1 秒</span>
+              </div>
+            </div>
+
+            <div class="checkbox-container">
+              <input ng-model="speedSys.disPlayFAList[7].crjssd2" type="checkbox">
+              <label for="cb_not_send">插入即时速度</label>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+</div>
+
+<script>
+  // 在AngularJS控制器中添加验证函数（在jsd_paramController.js中）
+  // 这些函数应该添加到您的JavaScript控制器中
+
+
+  // 页面交互逻辑
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log("页面加载完成，开始初始化交互");
+
+    // 获取所有菜单项
+    const menuItems = document.querySelectorAll('.menu-item');
+    // 获取所有参数内容区域
+    const paramSections = document.querySelectorAll('.param-section');
+    // 获取当前参数标题元素
+    const currentParamTitle = document.getElementById('currentParamTitle');
+
+    // 菜单项点击事件
+    menuItems.forEach(item => {
+      item.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-target');
+        console.log("点击菜单项:", this.querySelector('.menu-text').textContent, "目标ID:", targetId);
+
+        // 更新菜单活动状态
+        menuItems.forEach(menuItem => menuItem.classList.remove('active'));
+        this.classList.add('active');
+
+        // 更新参数标题
+        const menuText = this.querySelector('.menu-text').textContent;
+        currentParamTitle.textContent = menuText;
+
+        // 显示对应的参数内容区域
+        paramSections.forEach(section => {
+          console.log("检查参数区域:", section.id);
+          section.classList.remove('active');
+          if (section.id === targetId) {
+            console.log("激活参数区域:", section.id);
+            section.classList.add('active');
+          }
+        });
+
+      });
+    });
+
+
+    // 初始激活第一个菜单项
+    if (menuItems.length > 0) {
+      const firstMenuItem = menuItems[0];
+      const targetId = firstMenuItem.getAttribute('data-target');
+      console.log("初始激活目标ID:", targetId);
+
+      // 确保对应的参数区域显示
+      paramSections.forEach(section => {
+        if (section.id === targetId) {
+          section.classList.add('active');
+        }
+      });
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // 为所有输入框添加输入限制
+    const ipInputs = document.querySelectorAll('input[id*="ip"]');
+    ipInputs.forEach(input => {
+      input.addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9.]/g, '');
+
+        // 简单的IP格式验证
+        const parts = this.value.split('.');
+        if (parts.length > 4) {
+          this.value = parts.slice(0, 4).join('.');
+        }
+      });
+    });
+
+    // 数字输入框限制
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+      input.addEventListener('input', function(e) {
+        // 移除非数字字符
+        this.value = this.value.replace(/[^0-9]/g, '');
+
+        // 应用最大长度限制
+        if (this.maxLength && this.value.length > this.maxLength) {
+          this.value = this.value.substring(0, this.maxLength);
+        }
+      });
+    });
+
+    // 物联网编号限制为5位数字
+    const deviceAddressInput = document.getElementById('et_device_address');
+    deviceAddressInput.addEventListener('input', function(e) {
+      this.value = this.value.replace(/[^0-9]/g, '');
+      if (this.value.length > 5) {
+        this.value = this.value.substring(0, 5);
+      }
+    });
+
+  });
+</script>
+</body>
+</html>
